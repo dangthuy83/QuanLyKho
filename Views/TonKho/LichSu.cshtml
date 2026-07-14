@@ -1,0 +1,51 @@
+@model KhoQuanLy.Models.ViewModels.LichSuTonVM
+@{ ViewData["Title"] = "Lịch sử tồn: " + Model.TenVt; }
+<div class="d-flex gap-2 mb-3">
+  <a href="/TonKho" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🕐 Lịch sử giao dịch: <strong>@Model.TenVt</strong></span>
+  </div>
+  <form method="get" class="d-flex gap-2 mb-3">
+    <input type="hidden" name="id" value="@Model.IdVatTu"/>
+    <input name="tuNgay" type="date" class="form-control form-control-sm" style="max-width:160px"
+           value="@Model.TuNgay?.ToString("yyyy-MM-dd")"/>
+    <input name="denNgay" type="date" class="form-control form-control-sm" style="max-width:160px"
+           value="@Model.DenNgay?.ToString("yyyy-MM-dd")"/>
+    <button type="submit" class="btn-outline btn-sm"><i class="bi bi-filter"></i> Lọc</button>
+  </form>
+  <table class="tbl">
+    <thead>
+      <tr><th>Thời gian</th><th>Loại GD</th><th class="text-end">Số lượng</th>
+        <th class="text-end">Tồn trước</th><th class="text-end">Tồn sau</th><th>Ghi chú</th></tr>
+    </thead>
+    <tbody>
+    @foreach(var r in Model.LichSu){
+      var loaiLabel = r.LoaiGd switch {
+        "nhap_tc"     => "<span class='badge badge-green'>Nhập TC</span>",
+        "nhap_de_nghi"=> "<span class='badge badge-green'>Nhập đề nghị</span>",
+        "xuat_khac"   => "<span class='badge badge-red'>Xuất kho nhanh</span>",
+        "xuat_tieu_hao"=> "<span class='badge badge-red'>Xuất tiêu hao</span>",
+        "xuat_psp"    => "<span class='badge badge-blue'>Xuất PSP (cũ)</span>",
+        "tra_lai"     => "<span class='badge badge-yellow'>Trả lại</span>",
+        "dieu_chinh"  => "<span class='badge badge-gray'>Điều chỉnh</span>",
+        _             => "<span class='badge badge-gray'>"+r.LoaiGd+"</span>"
+      };
+      <tr>
+        <td class="text-muted" style="white-space:nowrap">@r.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm")</td>
+        <td>@Html.Raw(loaiLabel)</td>
+        <td class="text-end fw-bold @(r.SoLuong>0?"text-success":"text-danger")">
+          @(r.SoLuong>0?"+":"")@r.SoLuong.ToString("N3")
+        </td>
+        <td class="text-end text-muted">@r.TonTruoc?.ToString("N3")</td>
+        <td class="text-end">@r.TonSau?.ToString("N3")</td>
+        <td class="text-muted">@r.GhiChu</td>
+      </tr>
+    }
+    @if(!Model.LichSu.Any()){
+      <tr><td colspan="6" class="text-center text-muted py-4">Không có giao dịch nào</td></tr>
+    }
+    </tbody>
+  </table>
+</div>

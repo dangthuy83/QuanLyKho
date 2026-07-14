@@ -1,0 +1,132 @@
+@model KhoQuanLy.Models.Entities.PhieuSP
+@{
+  ViewData["Title"] = "Tạo phiếu sản phẩm";
+  var vatTuList = (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.VatTuList;
+  var vatTuCuonList = (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.VatTuCuonList;
+}
+<form method="post" asp-action="Create" asp-controller="PhieuSP">
+  <div asp-validation-summary="All" class="text-danger mb-2"></div>
+  <div class="card mb-3">
+    <div class="card-header"><span class="card-title">Thông tin phiếu</span></div>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Số phiếu <span class="text-danger">*</span></label>
+        <input asp-for="SoPhieu" class="form-control" placeholder="000136/2026/HNI-OFF"/>
+        <span asp-validation-for="SoPhieu" class="text-danger small"></span>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Số LSX</label>
+        <input asp-for="SoLsx" class="form-control" placeholder="000052/2026/DNM"/>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Khách hàng</label>
+        <input asp-for="KhachHang" class="form-control"/>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+        <input asp-for="TenSanPham" class="form-control"/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Mã sản phẩm</label>
+        <input asp-for="MaSanPham" class="form-control"/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Số lượng SP</label>
+        <input asp-for="SoLuongSp" class="form-control" type="number"/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Ngày lệnh</label>
+        <input asp-for="NgayLenh" class="form-control" type="date"/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Ngày giao hàng</label>
+        <input asp-for="NgayGiaoHang" class="form-control" type="date"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">
+      <span class="card-title">Danh sách vật tư</span>
+      <button type="button" class="btn-outline btn-sm" onclick="addRow()"><i class="bi bi-plus-lg"></i> Thêm dòng</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="tbl" id="vtRows">
+        <thead><tr><th>Chủng loại (text)</th><th>Kích thước</th><th>Vật tư PDF/gốc</th><th>Giấy cuộn thay thế</th><th>Số lượng YC</th><th>ĐVT</th><th style="width:70px">Cuộn/Tờ</th><th style="width:40px"></th></tr></thead>
+        <tbody id="vtBody">
+          <tr id="row-0">
+            <td><input name="chungLoai" class="form-control form-control-sm" placeholder="Loại giấy..."/></td>
+            <td><input name="kichThuoc" class="form-control form-control-sm" placeholder="96x69.5"/></td>
+            <td>
+              <input class="form-control form-control-sm vt-input" list="vatTuOptions" placeholder="Gõ mã/tên vật tư..." autocomplete="off" oninput="syncVatTuInput(this, vatTus, 'idVatTu')" onchange="syncVatTuInput(this, vatTus, 'idVatTu')"/>
+              <input name="idVatTu" type="hidden"/>
+            </td>
+            <td>
+              <input class="form-control form-control-sm vt-thay-the-input" list="vatTuCuonOptions" placeholder="Gõ mã/tên giấy cuộn..." autocomplete="off" oninput="syncVatTuInput(this, vatTuCuons, 'idVatTuThayThe')" onchange="syncVatTuInput(this, vatTuCuons, 'idVatTuThayThe')"/>
+              <input name="idVatTuThayThe" type="hidden"/>
+            </td>
+            <td><input name="soLuongYc" class="form-control form-control-sm" type="number" step="0.001" value="0"/></td>
+            <td><input name="dvt" class="form-control form-control-sm" value="Kg" style="width:60px"/></td>
+            <td class="text-center">
+              <input type="hidden" name="laCuonThayToRoi" value="false"/>
+              <input name="laCuonThayToRoi" type="checkbox" class="form-check-input la-cuon" value="true" onchange="toggleThayThe(this)"/>
+            </td>
+            <td><button type="button" class="btn-icon del" onclick="removeRow(0)"><i class="bi bi-x"></i></button></td>
+          </tr>
+        </tbody>
+      </table>
+      <datalist id="vatTuOptions">
+        @foreach(var i in vatTuList){<option value="@i.Text"></option>}
+      </datalist>
+      <datalist id="vatTuCuonOptions">
+        @foreach(var i in vatTuCuonList){<option value="@i.Text"></option>}
+      </datalist>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn-primary"><i class="bi bi-check-lg"></i> Lưu phiếu</button>
+    <a href="/PhieuSP" class="btn-outline">Hủy</a>
+  </div>
+</form>
+
+@section Scripts{<script>
+let rowIdx=1;
+const vatTus=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(vatTuList.Select(i=>new{ id=i.Value, text=i.Text })));
+const vatTuCuons=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(vatTuCuonList.Select(i=>new{ id=i.Value, text=i.Text })));
+function normalizeText(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
+function syncVatTuInput(input, list, hiddenName){
+  const row=input.closest('tr');
+  const hidden=row?.querySelector(`input[name="${hiddenName}"]`);
+  if(!hidden)return;
+  const q=normalizeText(input.value);
+  const item=list.find(x=>normalizeText(x.text)===q);
+  if(item){hidden.value=item.id;input.value=item.text;}else hidden.value='';
+}
+function addRow(){
+  const i=rowIdx++;
+  const tr=document.createElement('tr');tr.id='row-'+i;
+  tr.innerHTML=`<td><input name="chungLoai" class="form-control form-control-sm"/></td>
+    <td><input name="kichThuoc" class="form-control form-control-sm" placeholder="96x69.5"/></td>
+    <td><input class="form-control form-control-sm vt-input" list="vatTuOptions" placeholder="Gõ mã/tên vật tư..." autocomplete="off" oninput="syncVatTuInput(this, vatTus, 'idVatTu')" onchange="syncVatTuInput(this, vatTus, 'idVatTu')"/><input name="idVatTu" type="hidden"/></td>
+    <td><input class="form-control form-control-sm vt-thay-the-input" list="vatTuCuonOptions" placeholder="Gõ mã/tên giấy cuộn..." autocomplete="off" oninput="syncVatTuInput(this, vatTuCuons, 'idVatTuThayThe')" onchange="syncVatTuInput(this, vatTuCuons, 'idVatTuThayThe')"/><input name="idVatTuThayThe" type="hidden"/></td>
+    <td><input name="soLuongYc" class="form-control form-control-sm" type="number" step="0.001" value="0"/></td>
+    <td><input name="dvt" class="form-control form-control-sm" value="Kg" style="width:60px"/></td>
+    <td class="text-center">
+      <input type="hidden" name="laCuonThayToRoi" value="false"/>
+      <input name="laCuonThayToRoi" type="checkbox" class="form-check-input la-cuon" value="true" onchange="toggleThayThe(this)"/>
+    </td>
+    <td><button type="button" class="btn-icon del" onclick="removeRow(${i})"><i class="bi bi-x"></i></button></td>`;
+  document.getElementById('vtBody').appendChild(tr);
+}
+function removeRow(i){document.getElementById('row-'+i)?.remove();}
+function toggleThayThe(chk){
+  const row=chk.closest('tr');
+  const input=row?.querySelector('.vt-thay-the-input');
+  const hidden=row?.querySelector('input[name="idVatTuThayThe"]');
+  if(!input||!hidden)return;
+  input.disabled=!chk.checked;
+  if(!chk.checked){input.value='';hidden.value='';}
+}
+document.querySelectorAll('.la-cuon').forEach(toggleThayThe);
+</script>}

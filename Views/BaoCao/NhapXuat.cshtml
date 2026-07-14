@@ -1,0 +1,43 @@
+@model KhoQuanLy.Models.ViewModels.BaoCaoNhapXuatVM
+@{ ViewData["Title"] = "Báo cáo nhập xuất"; }
+<div class="d-flex gap-2 mb-3">
+  <a href="/BaoCao" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
+  <button onclick="window.print()" class="btn-outline btn-sm"><i class="bi bi-printer"></i> In</button>
+  <a href="/BaoCao/ExportNhapXuat?tuNgay=@Model.TuNgay.ToString("yyyy-MM-dd")&denNgay=@Model.DenNgay.ToString("yyyy-MM-dd")" class="btn-primary btn-sm"><i class="bi bi-file-earmark-excel"></i> Export Excel</a>
+</div>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">📊 Báo cáo nhập xuất: @Model.TuNgay.ToString("dd/MM/yyyy") – @Model.DenNgay.ToString("dd/MM/yyyy")</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>#</th><th>Tên vật tư</th><th>ĐVT</th>
+          <th class="text-end">Tồn đầu kỳ</th>
+          <th class="text-end">Tổng nhập</th>
+          <th class="text-end">Xuất khác/tiêu hao</th>
+          <th class="text-end">Trả lại</th>
+          <th class="text-end">Tồn cuối kỳ</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach(var (r,i) in Model.Rows.Select((x,i)=>(x,i+1))){
+        <tr>
+          <td class="text-muted">@i</td>
+          <td><strong>@r.TenVt</strong></td>
+          <td>@r.DonViTinh</td>
+          <td class="text-end">@r.TonDauKy.ToString("N3")</td>
+          <td class="text-end text-success">+@r.TongNhap.ToString("N3")</td>
+          <td class="text-end text-danger">-@r.TongXuat.ToString("N3")</td>
+          <td class="text-end">+@r.TongTraLai.ToString("N3")</td>
+          <td class="text-end fw-bold">@r.TonCuoiKy.ToString("N3")</td>
+        </tr>
+      }
+      @if(!Model.Rows.Any()){
+        <tr><td colspan="8" class="text-center text-muted py-4">Không có dữ liệu</td></tr>
+      }
+      </tbody>
+    </table>
+  </div>
+</div>

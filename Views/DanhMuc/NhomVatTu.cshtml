@@ -1,0 +1,28 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.NhomVatTu>
+@{ ViewData["Title"] = "Nhóm vật tư"; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-collection me-2"></i>Nhóm vật tư</span>
+    <button class="btn-primary btn-sm" onclick="openModal('Thêm nhóm vật tư','/DanhMuc/NhomVatTuForm')">
+      <i class="bi bi-plus-lg"></i> Thêm mới
+    </button>
+  </div>
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Tên nhóm</th><th>Mô tả</th><th>Ngày tạo</th><th style="width:80px">Thao tác</th></tr></thead>
+    <tbody>
+    @foreach(var (r,i) in Model.Select((x,i)=>(x,i+1))){
+      <tr>
+        <td class="text-muted">@i</td>
+        <td><strong>@r.TenNhom</strong></td>
+        <td class="text-muted">@r.MoTa</td>
+        <td class="text-muted">@r.CreatedAt.ToString("dd/MM/yyyy")</td>
+        <td>
+          <button class="btn-icon" onclick="openModal('Sửa nhóm vật tư','/DanhMuc/NhomVatTuForm?id=@r.Id')" title="Sửa"><i class="bi bi-pencil"></i></button>
+          <button class="btn-icon del" onclick="confirmAction('Xóa nhóm «@r.TenNhom»?','/DanhMuc/NhomVatTuDelete?id=@r.Id')" title="Xóa"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>
+    }
+    @if(!Model.Any()){<tr><td colspan="5" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr>}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,67 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.KhuonBe>
+@{ ViewData["Title"] = "Khuôn bế"; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-scissors me-2"></i>Khuôn bế</span>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="max-width:140px"
+              onchange="location='?trangThai='+this.value">
+        <option value="">Tất cả</option>        
+        <option value="dang_dung" selected="@(ViewBag.TrangThai?.ToString() == "dang_dung" ? "selected" : null)">Đang dùng</option>
+        <option value="hong" selected="@(ViewBag.TrangThai?.ToString() == "hong" ? "selected" : null)">Hỏng</option>
+        @*<option value="nghi_huu" selected="@(ViewBag.TrangThai?.ToString() == "nghi_huu" ? "selected" : null)">Nghỉ hưu</option>*@
+      </select>
+      <button class="btn-primary btn-sm" onclick="openModal('Thêm khuôn bế','/KhuonBe/Form')">
+        <i class="bi bi-plus-lg"></i> Thêm
+      </button>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Tên khuôn</th><th>Mã khuôn</th><th>Vật tư liên kết</th><th>Phiên bản</th><th>NCC</th>
+          <th class="text-end">Đã in (tờ)</th><th>Tuổi thọ</th><th>Ngày bắt đầu</th>
+          <th>Trạng thái</th><th style="width:80px">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach(var r in Model){
+        var pct = r.PhanTramTuoiTho;
+        var fillClass = pct >= 90 ? "danger" : pct >= 70 ? "warning" : "";
+        <tr>
+          <td><a href="/KhuonBe/Detail/@r.Id" class="fw-bold text-decoration-none">@r.TenKhuon</a></td>
+          <td><code style="font-size:.78rem">@r.MaKhuon</code></td>
+          <td class="text-muted">@(string.IsNullOrWhiteSpace(r.TenVatTu) ? "—" : r.TenVatTu)</td>
+          <td class="text-center">v@(r.PhienBan)</td>
+          <td class="text-muted">@r.TenNcc</td>
+          <td class="text-end">@r.SoToDaIn.ToString("N0")</td>
+          <td style="min-width:120px">
+            @if(r.DinhMucTuoiTho.HasValue){
+              <div style="font-size:.78rem" class="text-muted">@pct%</div>
+              <div class="ton-bar">
+                <div class="ton-fill @fillClass" style="width:@Math.Min(pct,100)%"></div>
+              </div>
+            } else { <span class="text-muted">—</span> }
+          </td>
+          <td class="text-muted">@r.NgayBatDau?.ToString("dd/MM/yy")</td>
+          <td>
+            <span class="badge @(r.TrangThai=="dang_dung"?"badge-green":r.TrangThai=="hong"?"badge-red":"badge-gray")">
+              @(r.TrangThai switch{"dang_dung"=>"Đang dùng","hong"=>"Hỏng","nghi_huu"=>"Nghỉ hưu",_=>r.TrangThai})
+            </span>
+          </td>
+          <td>
+            <a href="/KhuonBe/Detail/@r.Id" class="btn-icon" title="Chi tiết"><i class="bi bi-eye"></i></a>
+            <button class="btn-icon" onclick="openModal('Sửa khuôn bế','/KhuonBe/Form?id=@r.Id')" title="Sửa">
+              <i class="bi bi-pencil"></i>
+            </button>
+          </td>
+        </tr>
+      }
+      @if(!Model.Any()){
+        <tr><td colspan="10" class="text-center text-muted py-4">Chưa có khuôn bế nào</td></tr>
+      }
+      </tbody>
+    </table>
+  </div>
+</div>

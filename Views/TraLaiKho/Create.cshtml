@@ -1,0 +1,74 @@
+@model KhoQuanLy.Models.ViewModels.PhieuTraLaiVM
+@{ 
+  ViewData["Title"] = "Tạo phiếu trả lại kho";
+  var vatTuList = (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.VatTuList;
+  var phieuSpList = (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.PhieuSpList;
+}
+<form method="post" asp-action="Create" asp-controller="TraLaiKho">
+  <div class="card mb-3">
+    <div class="card-header"><span class="card-title">Thông tin phiếu</span></div>
+    <div class="row g-3">
+      <div class="col-md-3"><label class="form-label">Số phiếu *</label>
+        <input asp-for="SoPhieu" class="form-control" placeholder="TL-001"/>
+        <span asp-validation-for="SoPhieu" class="text-danger small"></span></div>
+      <div class="col-md-3"><label class="form-label">Ngày trả</label>
+        <input asp-for="NgayTra" class="form-control" type="date"/></div>
+      <div class="col-md-2"><label class="form-label">Lý do</label>
+        <select asp-for="LyDo" class="form-select">
+          <option value="loi">Lỗi</option><option value="thua">Thừa</option><option value="khac">Khác</option>
+        </select></div>
+      <div class="col-md-4"><label class="form-label">Ghi chú</label>
+        <input asp-for="GhiChu" class="form-control"/></div>
+    </div>
+  </div>
+  <div class="card mb-3">
+    <div class="card-header"><span class="card-title">Chi tiết vật tư trả</span>
+      <button type="button" class="btn-outline btn-sm" onclick="addTlRow()"><i class="bi bi-plus-lg"></i> Thêm</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="tbl"><thead><tr><th>Vật tư *</th><th>Liên kết PSP</th><th class="text-end">Số lượng</th><th>Ghi chú</th><th style="width:35px"></th></tr></thead>
+      <tbody id="tlBody">
+        <tr id="tlrow-0">
+          <td><input class="form-control form-control-sm" list="tlVatTuOptions" placeholder="Gõ mã/tên vật tư..." autocomplete="off" oninput="syncTlLookup(this, tlVatTus, 'ChiTiet[0].IdVatTu')" onchange="syncTlLookup(this, tlVatTus, 'ChiTiet[0].IdVatTu')"/><input name="ChiTiet[0].IdVatTu" type="hidden"/></td>
+          <td><input class="form-control form-control-sm" list="tlPhieuSpOptions" placeholder="Gõ số PSP..." autocomplete="off" oninput="syncTlLookup(this, tlPhieuSps, 'ChiTiet[0].IdPhieuSp')" onchange="syncTlLookup(this, tlPhieuSps, 'ChiTiet[0].IdPhieuSp')"/><input name="ChiTiet[0].IdPhieuSp" type="hidden"/></td>
+          <td><input name="ChiTiet[0].SoLuong" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+          <td><input name="ChiTiet[0].GhiChu" class="form-control form-control-sm"/></td>
+          <td><button type="button" class="btn-icon del" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>
+        </tr>
+      </tbody></table>
+      <datalist id="tlVatTuOptions">
+        @foreach(var i in vatTuList){<option value="@i.Text"></option>}
+      </datalist>
+      <datalist id="tlPhieuSpOptions">
+        @foreach(var i in phieuSpList){<option value="@i.Text"></option>}
+      </datalist>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn-primary"><i class="bi bi-check-lg"></i> Lưu phiếu</button>
+    <a href="/TraLaiKho" class="btn-outline">Hủy</a>
+  </div>
+</form>
+@section Scripts{<script>
+let tlIdx=1;
+const tlVatTus=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(vatTuList.Select(i=>new{ id=i.Value, text=i.Text })));
+const tlPhieuSps=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(phieuSpList.Select(i=>new{ id=i.Value, text=i.Text })));
+function normalizeText(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
+function syncTlLookup(input, list, hiddenName){
+  const row=input.closest('tr');
+  const hidden=row?.querySelector(`input[name="${hiddenName}"]`);
+  if(!hidden)return;
+  const item=list.find(x=>normalizeText(x.text)===normalizeText(input.value));
+  if(item){hidden.value=item.id;input.value=item.text;}else hidden.value='';
+}
+function addTlRow(){
+  const i=tlIdx++;
+  const tr=document.createElement('tr');tr.id='tlrow-'+i;
+  tr.innerHTML=`<td><input class="form-control form-control-sm" list="tlVatTuOptions" placeholder="Gõ mã/tên vật tư..." autocomplete="off" oninput="syncTlLookup(this, tlVatTus, 'ChiTiet[${i}].IdVatTu')" onchange="syncTlLookup(this, tlVatTus, 'ChiTiet[${i}].IdVatTu')"/><input name="ChiTiet[${i}].IdVatTu" type="hidden"/></td>
+    <td><input class="form-control form-control-sm" list="tlPhieuSpOptions" placeholder="Gõ số PSP..." autocomplete="off" oninput="syncTlLookup(this, tlPhieuSps, 'ChiTiet[${i}].IdPhieuSp')" onchange="syncTlLookup(this, tlPhieuSps, 'ChiTiet[${i}].IdPhieuSp')"/><input name="ChiTiet[${i}].IdPhieuSp" type="hidden"/></td>
+    <td><input name="ChiTiet[${i}].SoLuong" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+    <td><input name="ChiTiet[${i}].GhiChu" class="form-control form-control-sm"/></td>
+    <td><button type="button" class="btn-icon del" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>`;
+  document.getElementById('tlBody').appendChild(tr);
+}
+</script>}

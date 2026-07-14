@@ -1,0 +1,78 @@
+@model KhoQuanLy.Models.ViewModels.TonKhoVM
+@{ ViewData["Title"] = "Tồn kho & Cảnh báo"; }
+
+@if(Model.CanhBaoTonThap.Any()){
+<div class="alert alert-danger">
+  <strong>⚠ Cảnh báo:</strong> Có <strong>@Model.CanhBaoTonThap.Count</strong> vật tư tồn kho dưới mức tối thiểu!
+  @foreach(var v in Model.CanhBaoTonThap.Take(5)){
+    <span class="badge badge-red ms-1">@v.TenVt (@v.TonKhoHienTai.ToString("N2") @v.DonViTinh)</span>
+  }
+</div>
+}
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-layers me-2"></i>Tồn kho hiện tại</span>
+  </div>
+  <form method="get" class="d-flex gap-2 mb-3 flex-wrap">
+    <input name="search" value="@Model.FilterSearch" class="form-control" style="max-width:220px" placeholder="Tìm tên, mã vật tư..."/>
+    <select name="loai" class="form-select" style="max-width:160px" onchange="this.form.submit()">
+      <option value="">Tất cả loại</option>
+      <option value="giay_cuon" selected="@(Model?.FilterLoai?.ToString() == "giay_cuon" ? "selected" : null)">Giấy cuộn</option>
+      <option value="giay_to_roi" selected="@(Model?.FilterLoai?.ToString() == "giay_to_roi" ? "selected" : null)">Giấy tờ rời</option>
+      <option value="muc" selected="@(Model?.FilterLoai?.ToString() == "muc" ? "selected" : null)">Mực in</option>
+      <option value="khuon_be" selected="@(Model?.FilterLoai?.ToString() == "khuon_be" ? "selected" : null)">Khuôn bế</option>
+      <option value="khac" selected="@(Model?.FilterLoai?.ToString() == "khac" ? "selected" : null)">Khác</option>
+    </select>
+    <button type="submit" class="btn-outline btn-sm"><i class="bi bi-search"></i></button>
+  </form>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr><th>Mã VT</th><th>Tên vật tư</th><th>Nhóm</th><th>Loại</th><th>ĐVT</th>
+          <th class="text-end">Tồn hiện tại</th><th>Mức tối thiểu</th><th>Trạng thái</th>
+          <th style="width:60px"></th></tr>
+      </thead>
+      <tbody>
+      @foreach(var r in Model.DanhSach){
+        var low = r.TonKhoToiThieu>0 && r.TonKhoHienTai<r.TonKhoToiThieu;
+        var pct = r.TonKhoToiThieu>0 ? (double)r.TonKhoHienTai/(double)r.TonKhoToiThieu*100 : 100;
+        <tr>
+          <td><code style="font-size:.78rem">@r.MaVt</code></td>
+          <td><strong>@r.TenVt</strong></td>
+          <td class="text-muted">@r.TenNhom</td>
+          <td><span class="badge @(r.LoaiVatTu=="giay_cuon"?"badge-blue":r.LoaiVatTu=="muc"?"badge-pink":"badge-gray")">
+            @(r.LoaiVatTu switch{"giay_cuon"=>"G.Cuộn","giay_to_roi"=>"G.Tờ rời","muc"=>"Mực","khuon_be"=>"Khuôn bế",_=>"Khác"})
+          </span></td>
+          <td>@r.DonViTinh</td>
+          <td class="text-end">
+            <strong class="@(low?"text-danger":"")">@r.TonKhoHienTai.ToString("N3")</strong>
+            @if(r.TonKhoToiThieu>0){
+              <div class="ton-bar" style="min-width:80px">
+                <div class="ton-fill @(pct<50?"danger":pct<80?"warning":"")"
+                     style="width:@Math.Min(pct,100).ToString("F0")%"></div>
+              </div>
+            }
+          </td>
+          <td class="text-muted">@(r.TonKhoToiThieu>0?r.TonKhoToiThieu.ToString("N3"):"—")</td>
+          <td>
+            @if(low){<span class="badge badge-red">⚠ Thấp</span>}
+            else{<span class="badge badge-green">OK</span>}
+          </td>
+          <td>
+            <a href="/TonKho/LichSu/@r.Id" class="btn-icon" title="Lịch sử giao dịch">
+              <i class="bi bi-clock-history"></i>
+            </a>
+            <button class="btn-icon" onclick="openModal('Xuất kho nhanh','/TonKho/XuatKhoNhanhForm?id=@r.Id')" title="Xuất kho nhanh">
+              <i class="bi bi-box-arrow-up"></i>
+            </button>
+          </td>
+        </tr>
+      }
+      @if(!Model.DanhSach.Any()){
+        <tr><td colspan="9" class="text-center text-muted py-4">Không có dữ liệu</td></tr>
+      }
+      </tbody>
+    </table>
+  </div>
+</div>

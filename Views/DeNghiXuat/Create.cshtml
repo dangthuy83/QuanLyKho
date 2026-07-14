@@ -1,0 +1,246 @@
+@using KhoQuanLy.Models.Entities
+@{
+    ViewData["Title"] = "Tạo đợt đề nghị xuất giấy";
+    var phieuList = (IEnumerable<PhieuSP>)ViewBag.PhieuList;
+}
+<div class="card mb-3">
+  <div class="card-header"><span class="card-title">📋 Chọn phiếu SP cần đề nghị kho cấp giấy</span></div>
+  @if (!ViewData.ModelState.IsValid)
+  {
+    <div class="alert alert-danger m-3 mb-0" asp-validation-summary="All"></div>
+  }
+  <div style="overflow-x:auto">
+    <table class="tbl" id="tblPhieu">
+      <thead>
+        <tr>
+          <th style="width:40px"><input type="checkbox" id="chkAllPhieu" onchange="toggleAllPhieu(this.checked)" class="form-check-input"/></th>
+          <th>Số phiếu</th>
+          <th>Sản phẩm</th>
+          <th>Khách hàng</th>
+          <th>Số lượng SP</th>
+          <th>Ngày lệnh</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach(var p in phieuList){
+          <tr>
+            <td><input type="checkbox" class="form-check-input chkPhieu" value="@p.Id" onchange="onPhieuChange()"/></td>
+            <td><strong>@p.SoPhieu</strong></td>
+            <td>@p.TenSanPham</td>
+            <td>@(p.KhachHang ?? "—")</td>
+            <td class="text-end">@(p.SoLuongSp?.ToString("N0") ?? "—")</td>
+            <td>@(p.NgayLenh?.ToString("dd/MM/yy") ?? "—")</td>
+          </tr>
+        }
+        @if(!phieuList.Any()){
+          <tr><td colspan="6" class="text-center text-muted py-3">Không có phiếu SP nào ở trạng thái chưa hoàn thành</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card mb-3" id="vtCard" style="display:none">
+  <div class="card-header"><span class="card-title">🧾 Vật tư cần nhận từ kho</span></div>
+  <div style="overflow-x:auto">
+    <table class="tbl" id="tblVatTu">
+      <thead>
+        <tr>
+          <th style="width:40px"><input type="checkbox" id="chkAllVt" onchange="toggleAllVt(this.checked)" class="form-check-input"/></th>
+          <th>PSP</th>
+          <th>Sản phẩm</th>
+          <th>Giấy theo PDF</th>
+          <th>Giấy cuộn thay thế/thực cấp</th>
+          <th>Kích thước</th>
+          <th class="text-end">SL cần nhận</th>
+          <th>ĐVT</th>
+        </tr>
+      </thead>
+      <tbody id="vtBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<form method="post" id="fDot" asp-action="Create" asp-controller="DeNghiXuat">
+  <div id="selectedItems"></div>
+  <div class="mb-3">
+    <label class="form-label">Người tạo</label>
+    <input name="NguoiTao" class="form-control" style="max-width:250px" placeholder="Tên người tạo..."/>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Ghi chú</label>
+    <textarea name="GhiChu" class="form-control" rows="2"></textarea>
+  </div>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn-primary"><i class="bi bi-check-lg"></i> Tạo đợt</button>
+    <a href="/DeNghiXuat" class="btn-outline">Hủy</a>
+  </div>
+</form>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-arrow-counterclockwise"></i> Dòng chưa nhận/nhận thiếu từ đợt trước</span>
+    <button type="button" class="btn-outline btn-sm" onclick="loadPending()"><i class="bi bi-arrow-refresh"></i> Tải dữ liệu</button>
+  </div>
+  <div id="pendingSection" style="overflow-x:auto;display:none">
+    <table class="tbl" id="tblPending">
+      <thead>
+        <tr>
+          <th style="width:40px"><input type="checkbox" id="chkAllPending" onchange="toggleAllPending(this.checked)" class="form-check-input"/></th>
+          <th>Đợt trước</th>
+          <th>PSP</th>
+          <th>Sản phẩm</th>
+          <th>Giấy theo PDF</th>
+          <th>Giấy cuộn thay thế/thực cấp</th>
+          <th>Kích thước</th>
+          <th class="text-end">SL còn cần nhận</th>
+        </tr>
+      </thead>
+      <tbody id="pendingBody"></tbody>
+    </table>
+    <div id="pendingEmpty" class="text-center text-muted py-3" style="display:none">Không có dòng nào chưa nhận/nhận thiếu từ đợt trước</div>
+  </div>
+</div>
+
+<script>
+const selected=new Set();
+const selectedPending=new Set();
+const allVtData=[];
+const pendingData=[];
+
+async function loadPending(){
+  const res=await fetch('/DeNghiXuat/GetPendingFromPreviousDots',{method:'POST'});
+  const items=await res.json();
+  document.getElementById('pendingSection').style.display='block';
+  const tbody=document.getElementById('pendingBody');
+  const emptyDiv=document.getElementById('pendingEmpty');
+  if(items.length===0){
+    tbody.innerHTML='';
+    emptyDiv.style.display='block';
+    document.getElementById('tblPending').style.display='none';
+    return;
+  }
+  emptyDiv.style.display='none';
+  document.getElementById('tblPending').style.display='';
+  pendingData.length=0;
+  pendingData.push(...items);
+  let html='';
+  items.forEach(v=>{
+    const checked=selectedPending.has(v.id)?'checked':'';
+    html+=`<tr>
+      <td><input type="checkbox" class="form-check-input chkPending" value="${v.id}" ${checked} onchange="togglePendingItem(${v.id})"/></td>
+      <td><span class="badge badge-gray">${v.maDot||''}</span></td>
+      <td>${v.soPhieu||''}</td>
+      <td>${v.tenSanPham||''}</td>
+      <td>${v.giayTheoPdf||v.chungLoaiText||''}</td>
+      <td>${v.giayThucCap||v.giayTheoPdf||v.chungLoaiText||''}</td>
+      <td>${v.kichThuoc||''}</td>
+      <td class="text-end">${Number(v.soLuongConLai).toFixed(3)}</td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
+  document.getElementById('chkAllPending').checked=items.every(v=>selectedPending.has(v.id));
+  updateSelectedInputs();
+}
+
+function toggleAllPending(checked){
+  document.querySelectorAll('.chkPending').forEach(c=>{
+    c.checked=checked;
+    const id=parseInt(c.value);
+    if(checked) selectedPending.add(id); else selectedPending.delete(id);
+  });
+  updateSelectedInputs();
+}
+
+function togglePendingItem(id){
+  if(selectedPending.has(id))selectedPending.delete(id);else selectedPending.add(id);
+  const allChk=document.querySelectorAll('.chkPending');
+  const allChecked=allChk.length>0 && [...allChk].every(c=>c.checked);
+  document.getElementById('chkAllPending').checked=allChecked;
+  updateSelectedInputs();
+}
+
+function toggleAllPhieu(checked){
+  document.querySelectorAll('.chkPhieu').forEach(c=>c.checked=checked);
+  onPhieuChange();
+}
+
+async function onPhieuChange(){
+  const ids=[...document.querySelectorAll('.chkPhieu:checked')].map(c=>parseInt(c.value));
+  if(ids.length===0){
+    document.getElementById('vtCard').style.display='none';
+    document.getElementById('vtBody').innerHTML='';
+    selected.clear();
+    updateSelectedInputs();
+    return;
+  }
+  const res=await fetch('/DeNghiXuat/GetVatTuByMultiplePhieu',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(ids)
+  });
+  const items=await res.json();
+  // Clear VT không còn trong danh sách mới
+  const newIds=new Set(items.map(x=>x.id));
+  for(let id of selected){
+    if(!newIds.has(id)) selected.delete(id);
+  }
+  renderVatTu(items);
+}
+
+function renderVatTu(items){
+  allVtData.length=0;
+  allVtData.push(...items);
+  document.getElementById('vtCard').style.display='block';
+  let html='';
+  items.forEach(v=>{
+    const checked=selected.has(v.id)?'checked':'';
+    html+=`<tr>
+      <td><input type="checkbox" class="form-check-input chkVt" value="${v.id}" ${checked} onchange="toggleItem(${v.id})"/></td>
+      <td>${v.soPhieu||''}</td>
+      <td>${v.tenSanPham||''}</td>
+      <td>${v.giayTheoPdf||v.chungLoaiText||''}</td>
+      <td>${v.giayThucCap||v.giayTheoPdf||v.chungLoaiText||''}</td>
+      <td>${v.kichThuoc||''}</td>
+      <td class="text-end">${Number(v.soLuongYeuCau).toFixed(3)}</td>
+      <td>${v.donViTinh||''}</td>
+    </tr>`;
+  });
+  if(items.length===0){
+    html='<tr><td colspan="8" class="text-center text-muted py-3">Các phiếu đã chọn không có vật tư cần nhận</td></tr>';
+  }
+  document.getElementById('vtBody').innerHTML=html;
+  // Sync checkbox all VT
+  document.getElementById('chkAllVt').checked=items.length>0 && items.every(v=>selected.has(v.id));
+  updateSelectedInputs();
+}
+
+function toggleAllVt(checked){
+  document.querySelectorAll('.chkVt').forEach(c=>{
+    c.checked=checked;
+    const id=parseInt(c.value);
+    if(checked) selected.add(id); else selected.delete(id);
+  });
+  updateSelectedInputs();
+}
+
+function toggleItem(id){
+  if(selected.has(id))selected.delete(id);else selected.add(id);
+  // Sync "chọn tất cả" checkbox
+  const allChk=document.querySelectorAll('.chkVt');
+  const allChecked=allChk.length>0 && [...allChk].every(c=>c.checked);
+  document.getElementById('chkAllVt').checked=allChecked;
+  updateSelectedInputs();
+}
+
+function updateSelectedInputs(){
+  const c=document.getElementById('selectedItems');
+  const normalInputs=[...selected].map(i=>`<input type="hidden" name="IdPhieuSpVatTuList" value="${i}"/>`).join('');
+  const pendingInputs=[...selectedPending].map(i=>`<input type="hidden" name="IdPendingCtList" value="${i}"/>`).join('');
+  c.innerHTML=normalInputs+pendingInputs;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  loadPending();
+});
+</script>

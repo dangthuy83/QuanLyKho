@@ -1,0 +1,29 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.NhaCungCap>
+@{ ViewData["Title"] = "Nhà cung cấp"; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-truck me-2"></i>Nhà cung cấp</span>
+    <button class="btn-primary btn-sm" onclick="openModal('Thêm nhà cung cấp','/DanhMuc/NhaCungCapForm')"><i class="bi bi-plus-lg"></i> Thêm</button>
+  </div>
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Tên NCC</th><th>Điện thoại</th><th>Địa chỉ</th><th>Trạng thái</th><th style="width:80px">Thao tác</th></tr></thead>
+    <tbody>
+    @foreach(var (r,i) in Model.Select((x,i)=>(x,i+1))){
+      <tr>
+        <td class="text-muted">@i</td>
+        <td><strong>@r.TenNcc</strong></td>
+        <td>@r.DienThoai</td>
+        <td class="text-muted">@r.DiaChiNcc</td>
+        <td><span class="badge @(r.IsActive?"badge-green":"badge-gray")">@(r.IsActive?"Hoạt động":"Ngừng")</span></td>
+        <td>
+          <button class="btn-icon" onclick="openModal('Sửa NCC','/DanhMuc/NhaCungCapForm?id=@r.Id')"><i class="bi bi-pencil"></i></button>
+          <button class="btn-icon" onclick="postJson('/DanhMuc/NhaCungCapToggle',{id:@r.Id,isActive:@(r.IsActive?"false":"true")})">
+            <i class="bi bi-@(r.IsActive?"pause-circle":"play-circle")"></i>
+          </button>
+        </td>
+      </tr>
+    }
+    @if(!Model.Any()){<tr><td colspan="6" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr>}
+    </tbody>
+  </table>
+</div>

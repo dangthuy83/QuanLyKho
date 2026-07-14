@@ -1,0 +1,209 @@
+@model KhoQuanLy.Models.ViewModels.PhieuSPDetailVM
+@{
+  var psp = Model.PhieuSP!;
+  ViewData["Title"] = "Chi tiết PSP: " + psp.SoPhieu;
+}
+@{
+  string TtBadge(string tt) => tt switch {
+    "cho_xuat"       => "<span class='badge badge-yellow'>Chờ xuất</span>",
+    "da_xuat"        => "<span class='badge badge-blue'>Đã xuất</span>",
+    "hoan_thanh"     => "<span class='badge badge-green'>Hoàn thành</span>",
+    "chua_hoan_thanh"=> "<span class='badge badge-red'>Chưa HT</span>",
+    _                => "<span class='badge badge-gray'>"+tt+"</span>"
+  };
+  string NhanBadge(string s) => s switch {
+    "du"        => "<span class='badge badge-green'>Đủ</span>",
+    "thieu"     => "<span class='badge badge-red'>Thiếu</span>",
+    "khong_can" => "<span class='badge badge-gray'>KCần</span>",
+    _           => "<span class='badge badge-yellow'>Chưa nhận</span>"
+  };
+}
+<div class="d-flex gap-2 mb-3 flex-wrap align-items-center no-print">
+  <a href="/PhieuSP" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Danh sách</a>
+  <select class="form-select form-select-sm" style="max-width:170px" onchange="postJson('/PhieuSP/UpdateTrangThai',{id:@psp.Id,trangThai:this.value})">
+    <option value="cho_xuat" selected="@(psp.TrangThai == "cho_xuat" ? "selected" : null)">Chờ xuất</option>
+    <option value="da_xuat" selected="@(psp.TrangThai == "da_xuat" ? "selected" : null)">Đã xuất</option>
+    <option value="hoan_thanh" selected="@(psp.TrangThai == "hoan_thanh" ? "selected" : null)">Hoàn thành</option>
+    <option value="chua_hoan_thanh" selected="@(psp.TrangThai == "chua_hoan_thanh" ? "selected" : null)">Chưa HT</option>
+  </select>
+  <button class="btn-outline btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> In</button>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header"><span class="card-title">📄 @psp.SoPhieu @Html.Raw(TtBadge(psp.TrangThai))</span></div>
+  <div class="row g-2" style="font-size:.875rem">
+    <div class="col-sm-4"><span class="text-muted">Số LSX:</span> <strong>@psp.SoLsx</strong></div>
+    <div class="col-sm-4"><span class="text-muted">Sản phẩm:</span> <strong>@psp.TenSanPham</strong></div>
+    <div class="col-sm-4"><span class="text-muted">Mã SP:</span> @psp.MaSanPham</div>
+    <div class="col-sm-4"><span class="text-muted">Khách hàng:</span> @psp.KhachHang</div>
+    <div class="col-sm-4"><span class="text-muted">SL sản phẩm:</span> @psp.SoLuongSp?.ToString("N0") cái</div>
+    <div class="col-sm-4"><span class="text-muted">Ngày lệnh:</span> @psp.NgayLenh?.ToString("dd/MM/yyyy")</div>
+    <div class="col-sm-4"><span class="text-muted">Ngày giao:</span> @psp.NgayGiaoHang?.ToString("dd/MM/yyyy")</div>
+    <div class="col-sm-4"><span class="text-muted">Người tạo:</span> @psp.NguoiTao</div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header"><span class="card-title">Danh sách vật tư</span></div>
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Chủng loại</th><th>Kích thước</th><th>Giấy theo PDF</th><th>Giấy cuộn thay thế/thực cấp</th><th class="text-end">SL yêu cầu</th><th>ĐVT</th><th class="text-end">Đã nhận</th><th>Trạng thái</th><th class="no-print" style="width:80px">Thao tác</th></tr></thead>
+    <tbody>
+    @foreach(var (r,i) in Model.VatTus.Select((x,i)=>(x,i+1))){
+      <tr>
+        <td class="text-muted">@i</td>
+        <td>@r.ChungLoaiText @(r.LaCuonThayToRoi?"<span class='badge badge-orange' title='Cuộn thay tờ rời'>Cuộn</span>":"")</td>
+        <td>@r.KichThuoc</td>
+        <td>@(string.IsNullOrEmpty(r.TenVt)?"-":r.TenVt)</td>
+        <td>@(r.LaCuonThayToRoi ? (string.IsNullOrEmpty(r.TenVtThayThe)?"<span class='text-danger'>Chưa chọn</span>":r.TenVtThayThe) : "-")</td>
+        <td class="text-end fw-bold">@r.SoLuongYeuCau.ToString("N3")</td>
+        <td>@(r.LaCuonThayToRoi && !string.IsNullOrEmpty(r.DonViTinhThayThe) ? r.DonViTinhThayThe : r.DonViTinh)</td>
+        <td class="text-end">@r.SoLuongDaNhan.ToString("N3")</td>
+        <td>@Html.Raw(NhanBadge(r.TrangThaiNhan))</td>
+        <td class="no-print">
+          <button class="btn-icon" onclick="openXacNhan(@r.Id,@r.SoLuongYeuCau)" title="Xác nhận nhận"><i class="bi bi-check-circle"></i></button>
+          <button class="btn-icon" onclick="openSuaSL(@r.Id,@r.SoLuongYeuCau,@Json.Serialize(r.GhiChu),@(r.LaCuonThayToRoi.ToString().ToLower()),@(r.IdVatTuThayThe?.ToString() ?? "null"))" title="Sửa SL"><i class="bi bi-pencil"></i></button>
+        </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+
+@if(Model.LichSuSua.Any()){
+<div class="card">
+  <div class="card-header"><span class="card-title">📝 Lịch sử sửa lệnh</span></div>
+  <table class="tbl">
+    <thead><tr><th>Thời gian</th><th>Vật tư</th><th>SL cũ</th><th>SL mới</th><th>Lý do</th><th>Người sửa</th></tr></thead>
+    <tbody>
+    @foreach(var r in Model.LichSuSua){
+      <tr>
+        <td class="text-muted">@r.CreatedAt.ToString("dd/MM HH:mm")</td>
+        <td>@r.TenVt</td>
+        <td class="text-end">@r.SoLuongCu?.ToString("N3")</td>
+        <td class="text-end fw-bold">@r.SoLuongMoi?.ToString("N3")</td>
+        <td>@r.LyDo</td>
+        <td class="text-muted">@r.NguoiSua</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+}
+
+<!-- Modal xác nhận nhận -->
+<div class="modal fade" id="modalXacNhan" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Xác nhận nhận vật tư</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="xnId"/>
+        <div class="mb-2"><label class="form-label">Số lượng thực nhận</label>
+          <input id="xnSoLuong" class="form-control" type="number" step="0.001"/></div>
+        <div class="mb-2"><label class="form-label">Trạng thái</label>
+          <select id="xnTrangThai" class="form-select form-select-sm">
+            <option value="du">Đủ</option><option value="thieu">Thiếu</option>
+            <option value="khong_can">Không cần</option>
+          </select></div>
+        <div><label class="form-label">Ghi chú</label>
+          <input id="xnGhiChu" class="form-control form-control-sm"/></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn-primary btn-sm" onclick="saveXacNhan()">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal sửa SL -->
+<div class="modal fade" id="modalSuaSL" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Sửa số lượng yêu cầu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="suaId"/>
+        <div class="mb-2"><label class="form-label">Số lượng mới</label>
+          <input id="suaSoLuong" class="form-control" type="number" step="0.001"/></div>
+        <div class="form-check mb-2">
+          <input id="suaLaCuonThayToRoi" class="form-check-input" type="checkbox" onchange="toggleSuaThayThe()"/>
+          <label class="form-check-label" for="suaLaCuonThayToRoi">Cấp cuộn thay tờ rời</label>
+        </div>
+        <div class="mb-2"><label class="form-label">Giấy cuộn thay thế</label>
+          <input id="suaVatTuThayTheText" class="form-control form-control-sm" list="suaVatTuCuonOptions" placeholder="Gõ mã/tên giấy cuộn..." autocomplete="off" oninput="syncSuaVatTuThayThe()" onchange="syncSuaVatTuThayThe()"/>
+          <input id="suaIdVatTuThayThe" type="hidden"/>
+          <datalist id="suaVatTuCuonOptions">
+            @foreach(var i in Model.VatTuCuonList){<option value="@i.Text"></option>}
+          </datalist>
+          <div class="form-text">Bắt buộc chọn khi tick cấp cuộn thay tờ rời.</div>
+        </div>
+        <div class="mb-2"><label class="form-label">Ghi chú</label>
+          <input id="suaGhiChu" class="form-control form-control-sm"/></div>
+        <div><label class="form-label">Lý do sửa</label>
+          <input id="suaLyDo" class="form-control form-control-sm" placeholder="Phòng KH điều chỉnh..."/></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn-primary btn-sm" onclick="saveSuaSL()">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts{<script>
+let mXN=null,mSua=null;
+const suaVatTuCuons=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VatTuCuonList.Select(i=>new{ id=i.Value, text=i.Text })));
+function normalizeText(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
+function syncSuaVatTuThayThe(){
+  const input=document.getElementById('suaVatTuThayTheText');
+  const hidden=document.getElementById('suaIdVatTuThayThe');
+  const item=suaVatTuCuons.find(x=>normalizeText(x.text)===normalizeText(input.value));
+  if(item){hidden.value=item.id;input.value=item.text;}else hidden.value='';
+}
+function openXacNhan(id,slYc){
+  document.getElementById('xnId').value=id;
+  document.getElementById('xnSoLuong').value=slYc;
+  mXN=new bootstrap.Modal(document.getElementById('modalXacNhan'));mXN.show();
+}
+async function saveXacNhan(){
+  const id=document.getElementById('xnId').value;
+  const sl=document.getElementById('xnSoLuong').value;
+  const tt=document.getElementById('xnTrangThai').value;
+  const gc=document.getElementById('xnGhiChu').value;
+  const form=new FormData();form.append('id',id);form.append('soLuong',sl);form.append('trangThai',tt);form.append('ghiChu',gc);
+  const res=await fetch('/PhieuSP/XacNhanNhan',{method:'POST',body:form});
+  const j=await res.json();if(j.ok){mXN.hide();toast('Đã lưu!');location.reload();}
+}
+function openSuaSL(id,sl,gc,laCuon,idVatTuThayThe){
+  document.getElementById('suaId').value=id;
+  document.getElementById('suaSoLuong').value=sl;
+  document.getElementById('suaGhiChu').value=gc||'';
+  document.getElementById('suaLaCuonThayToRoi').checked=!!laCuon;
+  document.getElementById('suaIdVatTuThayThe').value=idVatTuThayThe||'';
+  const selected=suaVatTuCuons.find(x=>x.id===(idVatTuThayThe||'').toString());
+  document.getElementById('suaVatTuThayTheText').value=selected?selected.text:'';
+  toggleSuaThayThe();
+  document.getElementById('suaLyDo').value='';
+  mSua=new bootstrap.Modal(document.getElementById('modalSuaSL'));mSua.show();
+}
+function toggleSuaThayThe(){
+  const chk=document.getElementById('suaLaCuonThayToRoi');
+  const input=document.getElementById('suaVatTuThayTheText');
+  const hidden=document.getElementById('suaIdVatTuThayThe');
+  input.disabled=!chk.checked;
+  if(!chk.checked){input.value='';hidden.value='';}
+}
+async function saveSuaSL(){
+  const id=document.getElementById('suaId').value;
+  const sl=document.getElementById('suaSoLuong').value;
+  const gc=document.getElementById('suaGhiChu').value;
+  const laCuon=document.getElementById('suaLaCuonThayToRoi').checked;
+  const idThayThe=document.getElementById('suaIdVatTuThayThe').value;
+  const ly=document.getElementById('suaLyDo').value;
+  if(laCuon && !idThayThe){toast('Vui lòng chọn giấy cuộn thay thế.','err');return;}
+  const form=new FormData();form.append('Id',id);form.append('SoLuongYeuCau',sl);form.append('LaCuonThayToRoi',laCuon);form.append('IdVatTuThayThe',idThayThe);form.append('GhiChu',gc);form.append('LyDo',ly);
+  const res=await fetch('/PhieuSP/UpdateVatTuCt',{method:'POST',body:form});
+  const j=await res.json();if(j.ok){mSua.hide();toast('Đã lưu!');location.reload();}else toast(j.msg||'Lỗi!','err');
+}
+</script>}

@@ -1,0 +1,24 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.DotDeNghi>
+@{ ViewData["Title"] = "Đề nghị xuất giấy"; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-send me-2"></i>Đợt đề nghị xuất giấy</span>
+    <a href="/DeNghiXuat/Create" class="btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Tạo đợt mới</a>
+  </div>
+  <table class="tbl">
+    <thead><tr><th>Mã đợt</th><th>Ngày tạo</th><th>Người tạo</th><th>Trạng thái</th><th>Ghi chú</th><th style="width:60px"></th></tr></thead>
+    <tbody>
+    @foreach(var r in Model){
+      <tr>
+        <td><strong>@r.MaDot</strong></td>
+        <td>@r.NgayTao.ToString("dd/MM/yyyy")</td>
+        <td class="text-muted">@r.NguoiTao</td>
+        <td><span class="badge @(r.TrangThai=="hoan_thanh"?"badge-green":"badge-yellow")">@(r.TrangThai=="hoan_thanh"?"Hoàn thành":"Chờ lấy")</span></td>
+        <td class="text-muted">@r.GhiChu</td>
+        <td><a href="/DeNghiXuat/Detail/@r.Id" class="btn-icon"><i class="bi bi-eye"></i></a></td>
+      </tr>
+    }
+    @if(!Model.Any()){<tr><td colspan="6" class="text-center text-muted py-4">Chưa có đợt nào</td></tr>}
+    </tbody>
+  </table>
+</div>

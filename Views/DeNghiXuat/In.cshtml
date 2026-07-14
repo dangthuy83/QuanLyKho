@@ -1,0 +1,109 @@
+@model KhoQuanLy.Models.ViewModels.DotDeNghiDetailVM
+@{ ViewData["Title"] = "In phiếu"; Layout=null; }
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<style> 
+    /* 1. Cấu hình trang in A4 Ngang */
+    @@page {
+        size: A4 landscape;
+        margin: 5mm; /* Khoảng cách lề an toàn để không mất viền */
+    }
+
+    /* 2. Áp dụng chung cho cả hiển thị và in ấn */
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 14px !important;
+        margin: 0;
+        padding: 10px;
+        color: #000;
+        background: #fff;
+    }
+
+    table {
+        width: 100% !important; 
+        border-collapse: collapse !important;
+        table-layout: fixed !important; /* Khóa chết tổng độ rộng bảng bằng 100% trang giấy */
+    }
+
+    th, td {
+        border: 1px solid #000 !important; /* Đường kẻ đen rõ ràng khi in */
+        padding: 5px 4px;
+        font-size: 14px !important; /* Hạ xuống 13px một chút để chữ dài tự tin xuống dòng */
+        word-break: break-word !important; /* Ép mọi text dài (kể cả ghi chú) phải xuống dòng, không đẩy bảng */
+        vertical-align: middle;
+    }
+
+    th {        
+        background: #f0f0f0 !important;
+        font-weight: bold;
+        -webkit-print-color-adjust: exact; /* Giữ màu nền xám của header khi in */
+        print-color-adjust: exact;
+    }
+
+    h2 { text-align: center; margin-bottom: 20px; }
+    .sig { margin-top: 40px; display: flex; justify-content: space-around; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<h2>PHIẾU ĐỀ NGHỊ XUẤT GIẤY</h2>
+<p style="font-size: 16px;" ><strong>Mã đợt:</strong> @Model.DotDeNghi.MaDot &nbsp; <strong>Ngày:</strong> @Model.DotDeNghi.NgayTao.ToString("dd/MM/yyyy")</p>
+<table>
+  <thead>
+    <tr style="text-align:center">
+      <th style="width: 4%;">STT</th>
+      <th style="width: 7%;">Số PSP</th>
+      <th style="width: 24%;">Tên sản phẩm</th>
+      @*<th>Giấy theo PDF</th>*@
+      <th style="width: 19%;">Giấy cuộn thay thế/thực cấp</th>
+      @*<th>Khổ</th>*@
+      <th style="width: 7%;">SL yêu cầu (kg)</th>
+      @*<th>ĐVT</th>*@      
+      <th style="width: 13%;">Đề nghị kho cấp (kg)</th>
+      <th style="width: 7%;">Đã nhận/SL Tồn (kg)</th>
+      <th style="width: 7%;">Thực nhận</th>
+      <th style="width: 12%;">Ghi chú</th>
+    </tr>
+  </thead>
+<tbody>
+@foreach(var (r,i) in Model.ChiTiet.Select((x,i)=>(x,i+1))){
+  <tr style="text-align:center">
+    <td>@i</td>
+    @*<td>@r.SoPhieu</td>*@
+    <td>@r.SoPhieuNgan</td>
+    <td>@r.TenSanPham</td>
+    @*<td>@(string.IsNullOrWhiteSpace(r.TenVt) ? r.ChungLoaiText : r.TenVt)</td>*@
+    <td style="font-size: 20px !important;">@(!string.IsNullOrWhiteSpace(r.TenVtThayThe) ? r.TenVtThayThe : (string.IsNullOrWhiteSpace(r.TenVt) ? r.ChungLoaiText : r.TenVt))</td>
+    @*<td>@r.KichThuoc</td>*@
+    <td>@r.SoLuongYeuCau.ToString("N1")</td>
+    @*<td>@(!string.IsNullOrWhiteSpace(r.DonViTinhThayThe) ? r.DonViTinhThayThe : r.DonViTinh)</td>*@    
+    <td style="font-size: 20px !important; font-weight: bold;">@r.SoLuongDeNghi?.ToString("N1")</td>
+    @{
+        // TonKyTruoc = tổng số đã lấy từ các đợt trước
+        // = SoLuongYeuCau (nhu cầu PSP gốc) - SoLuongDeNghi (đề nghị lần này)
+        // Nếu = 0 (lần đầu đề nghị) thì dùng tồn snapshot từ DB
+        var tonKyTruocTinh = r.SoLuongYeuCau - (r.SoLuongDeNghi ?? 0);
+        if (tonKyTruocTinh == 0) tonKyTruocTinh = r.TonKyTruoc;
+    }
+    <td>@(tonKyTruocTinh > 0 ? tonKyTruocTinh.ToString("N1") : "")</td>
+    <td></td>
+    <td></td>
+    @*<td>@r.GhiChu</td>*@
+  </tr>
+}
+</tbody></table>
+<div class="sig"><div style="text-align:center"><p>Người đề nghị</p><br/><br/><p>_________________</p></div>
+<div style="text-align:center"><p>Thủ kho</p><br/><br/><p>_________________</p></div></div>
+<script>
+    // 1. Kích hoạt lệnh in ngay khi vào trang
+    window.print();
+
+    // 2. Chờ khi người dùng tương tác xong và quay lại (focus) vào tab này
+    window.onfocus = function () {
+        // Trì hoãn 500ms (0.5 giây) rồi mới đóng tab
+        // Khoảng thời gian này để chắc chắn bạn không bị tắt tab khi nhảy sang cửa sổ Preferences
+        setTimeout(function () {
+            window.close();
+        }, 500);
+    };
+</script>
+</body>
+</html>

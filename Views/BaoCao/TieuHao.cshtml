@@ -1,0 +1,40 @@
+@model KhoQuanLy.Models.ViewModels.BaoCaoTieuHaoVM
+@{ ViewData["Title"] = "Báo cáo tiêu hao " + Model.Nam; }
+<div class="d-flex gap-2 mb-3">
+  <a href="/BaoCao" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
+  <button onclick="window.print()" class="btn-outline btn-sm"><i class="bi bi-printer"></i> In</button>
+  <a href="/BaoCao/ExportTieuHao?nam=@Model.Nam" class="btn-primary btn-sm"><i class="bi bi-file-earmark-excel"></i> Export Excel</a>
+</div>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🧪 Tiêu hao vật tư năm @Model.Nam</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Vật tư</th><th>ĐVT</th>
+          <th class="text-end">T1</th><th class="text-end">T2</th><th class="text-end">T3</th>
+          <th class="text-end">T4</th><th class="text-end">T5</th><th class="text-end">T6</th>
+          <th class="text-end">T7</th><th class="text-end">T8</th><th class="text-end">T9</th>
+          <th class="text-end">T10</th><th class="text-end">T11</th><th class="text-end">T12</th>
+          <th class="text-end">Tổng</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach(var r in Model.Rows){
+        <tr>
+          <td><strong>@r.TenVt</strong></td><td>@r.DonViTinh</td>
+          @foreach(var v in new[]{r.T1,r.T2,r.T3,r.T4,r.T5,r.T6,r.T7,r.T8,r.T9,r.T10,r.T11,r.T12}){
+            <td class="text-end @(v>0?"":"text-muted")">@(v>0?v.ToString("N3"):"—")</td>
+          }
+          <td class="text-end fw-bold">@r.Tong.ToString("N3")</td>
+        </tr>
+      }
+      @if(!Model.Rows.Any()){
+        <tr><td colspan="15" class="text-center text-muted py-4">Không có dữ liệu</td></tr>
+      }
+      </tbody>
+    </table>
+  </div>
+</div>

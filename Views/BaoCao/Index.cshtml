@@ -1,0 +1,47 @@
+@{ ViewData["Title"] = "Báo cáo & Export"; }
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card" style="height:100%">
+      <div class="card-header"><span class="card-title">📊 Nhập xuất theo kỳ</span></div>
+      <p class="text-muted" style="font-size:.875rem">Báo cáo tổng hợp nhập – xuất – tồn theo khoảng thời gian.</p>
+      <form method="get" action="/BaoCao/NhapXuat" class="d-flex gap-2 flex-wrap">
+        <div class="flex-fill"><label class="form-label">Từ ngày</label>
+          <input name="tuNgay" type="date" class="form-control form-control-sm"
+                value="@(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToString("yyyy-MM-dd"))" /></div>
+        <div class="flex-fill"><label class="form-label">Đến ngày</label>
+          <input name="denNgay" type="date" class="form-control form-control-sm"
+                 value="@DateTime.Today.ToString("yyyy-MM-dd")"/></div>
+        <div class="align-self-end">
+          <button type="submit" class="btn-primary btn-sm">Xem báo cáo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card" style="height:100%">
+      <div class="card-header"><span class="card-title">🧪 Tiêu hao theo tháng</span></div>
+      <p class="text-muted" style="font-size:.875rem">Xu hướng tiêu hao mực, chất phủ theo từng tháng trong năm.</p>
+      <form method="get" action="/BaoCao/TieuHao" class="d-flex gap-2">
+        <div class="flex-fill"><label class="form-label">Năm</label>
+          <select name="nam" class="form-select form-select-sm">
+            @for(int y=DateTime.Today.Year; y>=DateTime.Today.Year-3; y--){
+              <option value="@y">@y</option>
+            }
+          </select></div>
+        <div class="align-self-end">
+          <button type="submit" class="btn-primary btn-sm">Xem báo cáo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card" style="height:100%">
+      <div class="card-header"><span class="card-title">✂️ Tuổi thọ khuôn bế</span></div>
+      <p class="text-muted" style="font-size:.875rem">So sánh tuổi thọ thực tế khuôn bế theo nhà cung cấp.</p>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="/BaoCao/KhuonBeTheoNcc" class="btn-primary btn-sm">Xem báo cáo</a>
+        <a href="/KhuonBe" class="btn-outline btn-sm">Danh sách khuôn</a>
+      </div>
+    </div>
+  </div>
+</div>

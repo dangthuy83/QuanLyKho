@@ -1,0 +1,102 @@
+@model KhoQuanLy.Models.ViewModels.KhuonBeVM
+@{
+  var vatTuList = Model.VatTuKhuonBeList?.ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+  var selectedVatTuText = Model.IdVatTu.HasValue
+    ? vatTuList.FirstOrDefault(x => x.Value == Model.IdVatTu.Value.ToString())?.Text ?? ""
+    : "";
+}
+<form id="fKb" asp-action="Save" asp-controller="KhuonBe" method="post">
+  <input type="hidden" asp-for="Id"/>
+  <div class="mb-2">
+    <label asp-for="IdVatTu" class="form-label"></label>
+    <input asp-for="IdVatTu" type="hidden"/>
+    <input id="vatTuKhuonBeSearch" class="form-control form-control-sm" list="vatTuKhuonBeOptions"
+           value="@selectedVatTuText" placeholder="Gõ mã hoặc tên vật tư khuôn bế..." autocomplete="off"
+           oninput="__syncKhuonBeVatTuLocal(this)" onchange="__syncKhuonBeVatTuLocal(this)"/>
+    <datalist id="vatTuKhuonBeOptions">
+      @foreach(var i in vatTuList)
+      {
+        var parts = (i.Text ?? "").Split(" - ", 2, StringSplitOptions.None);
+        var maVt = parts.Length > 0 ? parts[0] : "";
+        var tenVt = parts.Length > 1 ? parts[1] : i.Text;
+        <option value="@i.Text" data-id="@i.Value" data-ma="@maVt" data-ten="@tenVt"></option>
+      }
+    </datalist>
+    <div class="form-text small">Gõ mã/tên để tìm vật tư khuôn bế. Khi chọn vật tư có sẵn, hệ thống tự đồng bộ <b>Mã khuôn = Mã vật tư</b> và link bằng id_vat_tu. Nếu để trống, hệ thống dùng mã khuôn đang gợi ý để tự tạo/liên kết vật tư mới theo mã/tên khuôn.</div>
+  </div>
+  <div class="row g-2 mb-2">
+    <div class="col-8">
+      <label asp-for="TenKhuon" class="form-label"></label>
+      <input asp-for="TenKhuon" class="form-control form-control-sm"/>
+      <span asp-validation-for="TenKhuon" class="text-danger small"></span>
+    </div>
+    <div class="col-4">
+      <label asp-for="MaKhuon" class="form-label"></label>
+      <input asp-for="MaKhuon" class="form-control form-control-sm"/>
+      <span asp-validation-for="MaKhuon" class="text-danger small"></span>
+    </div>
+  </div>
+  <div class="row g-2 mb-2">
+    <div class="col-6">
+      <label asp-for="IdNhaCungCap" class="form-label"></label>
+      <select asp-for="IdNhaCungCap" class="form-select form-select-sm" asp-items="Model.NccList">
+        <option value="">-- Chọn NCC --</option>
+      </select>
+    </div>
+    <div class="col-6">
+      <label asp-for="NgayBatDau" class="form-label"></label>
+      <input asp-for="NgayBatDau" class="form-control form-control-sm" type="date"/>
+    </div>
+  </div>
+  <div class="row g-2 mb-2">
+    <div class="col-6">
+      <label asp-for="DinhMucTuoiTho" class="form-label"></label>
+      <input asp-for="DinhMucTuoiTho" class="form-control form-control-sm" type="number" placeholder="Tờ tối đa..."/>
+    </div>
+    <div class="col-6">
+      <label asp-for="TrangThai" class="form-label"></label>
+      <select asp-for="TrangThai" class="form-select form-select-sm">
+        <option value="dang_dung">Đang dùng</option>
+        <option value="hong">Hỏng</option>
+        @*<option value="nghi_huu">Nghỉ hưu</option>*@
+      </select>
+    </div>
+  </div>
+  <div class="mb-3">
+    <label asp-for="GhiChu" class="form-label"></label>
+    <textarea asp-for="GhiChu" class="form-control form-control-sm" rows="2"></textarea>
+  </div>
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn-primary btn-sm" onclick="submitForm('fKb')">
+      <i class="bi bi-check-lg"></i> Lưu
+    </button>
+  </div>
+</form>
+<script>
+function __syncKhuonBeVatTuLocal(input){
+  const hidden=document.getElementById('IdVatTu');
+  const ma=document.getElementById('MaKhuon');
+  const ten=document.getElementById('TenKhuon');
+  const list=document.getElementById('vatTuKhuonBeOptions');
+  const value=input?.value||'';
+  const normalize=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+  const opt=list ? Array.from(list.options).find(o=>normalize(o.value)===normalize(value)) : null;
+  if(opt){
+    if(hidden) hidden.value=opt.dataset.id||'';
+    if(ma) ma.value=opt.dataset.ma||((opt.value.match(/^(VT\d+)/i)||[])[1]||ma.value);
+    if(ten && !ten.value.trim()) ten.value=opt.dataset.ten||opt.value.replace(/^(VT\d+)\s*-\s*/i,'').trim();
+    input.value=opt.value;
+    return;
+  }
+  if(hidden) hidden.value='';
+  const parsed=(value.match(/^(VT\d+)/i)||[])[1]||'';
+  if(ma && parsed) ma.value=parsed;
+}
+(() => {
+  const input=document.getElementById('vatTuKhuonBeSearch');
+  if(!input)return;
+  input.addEventListener('input',()=>__syncKhuonBeVatTuLocal(input));
+  input.addEventListener('change',()=>__syncKhuonBeVatTuLocal(input));
+})();
+</script>

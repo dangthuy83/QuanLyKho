@@ -1,0 +1,157 @@
+@{
+    ViewData["Title"] = "Import Phiếu sản phẩm";
+}
+<div class="card" style="max-width:800px;margin:0 auto">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-upload me-2"></i>Import Phiếu sản phẩm</span>
+        <a href="/PhieuSP" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" action="/PhieuSP/Upload" id="importForm">
+            <div class="mb-3">
+                <label class="form-label">Chọn file PDF (.pdf) hoặc Excel (.xlsx)</label>
+                <input type="file" name="files" accept=".pdf,.xlsx" class="form-control" required multiple id="fileInput" />
+                <div class="form-text">Hỗ trợ PDF PSP hoặc Excel (.xlsx) theo mẫu. Có thể chọn nhiều file cùng lúc.</div>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="true" id="suaPhieuSanPham" name="suaPhieuSanPham" />
+                <label class="form-check-label fw-semibold" for="suaPhieuSanPham">
+                    Sửa phiếu sản phẩm đã tồn tại
+                </label>
+                <div class="form-text">
+                    Chỉ tick khi file là phiếu sửa của PSP đã có trong hệ thống. Nếu không tìm thấy số phiếu cũ, hệ thống sẽ không import.
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mb-3">
+                <button type="button" class="btn-outline-primary" id="btnPreview" onclick="previewExcel()">
+                    <i class="bi bi-eye"></i> Xem trước
+                </button>
+                <button type="submit" class="btn-primary" id="btnImport">
+                    <i class="bi bi-cloud-upload"></i> Import
+                </button>
+            </div>
+        </form>
+
+        <div id="previewArea" class="d-none">
+            <hr />
+            <h5 class="mb-2"><i class="bi bi-table me-1"></i>Dữ liệu xem trước</h5>
+            <div id="previewContent"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('fileInput')?.addEventListener('change', () => {
+        document.getElementById('previewArea').classList.add('d-none');
+        document.getElementById('previewContent').innerHTML = '';
+    });
+
+    async function previewExcel() {
+        const fileInput = document.getElementById('fileInput');
+        if (!fileInput.files || fileInput.files.length === 0) {
+            toast('Vui lòng chọn file trước.', 'err');
+            return;
+        }
+
+        // Chỉ preview file .xlsx đầu tiên
+        const xlsxFiles = Array.from(fileInput.files).filter(f => f.name.toLowerCase().endsWith('.xlsx'));
+        if (xlsxFiles.length === 0) {
+            toast('Chỉ hỗ trợ xem trước cho file Excel (.xlsx).', 'err');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', xlsxFiles[0]);
+
+        document.getElementById('btnPreview').disabled = true;
+        document.getElementById('btnPreview').innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang đọc...';
+
+        try {
+            const resp = await fetch('/PhieuSP/PreviewExcel', { method: 'POST', body: formData });
+            const result = await resp.json();
+
+            if (!result.ok) {
+                toast(result.msg || 'Lỗi đọc file.', 'err');
+                return;
+            }
+
+            renderPreview(result.data);
+            document.getElementById('previewArea').classList.remove('d-none');
+            toast(`Đọc thành công: ${result.data.soPsp} phiếu, ${result.data.tongDong} dòng vật tư.`);
+        } catch (ex) {
+            toast('Lỗi kết nối: ' + ex.message, 'err');
+        } finally {
+            document.getElementById('btnPreview').disabled = false;
+            document.getElementById('btnPreview').innerHTML = '<i class="bi bi-eye"></i> Xem trước';
+        }
+    }
+
+    function renderPreview(data) {
+        const html = `
+            <div class="mb-2 text-muted small">
+                File: <strong>${escHtml(data.tenFile)}</strong> |
+                Tổng số PSP: <strong>${data.soPsp}</strong> |
+                Tổng dòng vật tư: <strong>${data.tongDong}</strong>
+            </div>
+            <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                <table class="tbl table-sm">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"><input type="checkbox" id="chkAllPreview" checked onchange="toggleAllPreview(this)"></th>
+                            <th>Số phiếu</th>
+                            <th>Tên SP</th>
+                            <th>KH</th>
+                            <th>SL SP</th>
+                            <th>Tên vật tư</th>
+                            <th>Kích thước</th>
+                            <th>SL tờ rời</th>
+                            <th>SL yêu cầu</th>
+                            <th>ĐVT</th>
+                            <th>Cảnh báo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.rows.map((r, idx) => `
+                            <tr class="${r.daTonTai ? 'table-warning' : ''}">
+                                <td><input type="checkbox" class="chk-preview-row" data-idx="${idx}" ${r.duocChon ? 'checked' : ''}></td>
+                                <td>${escHtml(r.soPhieu)}</td>
+                                <td>${escHtml(r.tenSanPham)}</td>
+                                <td>${escHtml(r.khachHang || '')}</td>
+                                <td class="text-end">${fmtNum(r.soLuongSp)}</td>
+                                <td>${escHtml(r.tenVatTu)}</td>
+                                <td>${escHtml(r.kichThuoc || '')}</td>
+                                <td class="text-end">${fmtNum(r.soLuongToRoi)}</td>
+                                <td class="text-end">${fmtNum(r.soLuongYeuCau)}</td>
+                                <td>${escHtml(r.donViTinh)}</td>
+                                <td>${r.canhBao ? '<span class="badge bg-warning text-dark">' + escHtml(r.canhBao) + '</span>' : ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2 text-muted small">
+                <i class="bi bi-info-circle"></i> Dòng màu vàng = phiếu đã tồn tại trong hệ thống. Bảng này dùng để kiểm tra trước khi import; khi bấm Import hệ thống vẫn xử lý theo file và checkbox “Sửa phiếu sản phẩm”.
+            </div>
+        `;
+        document.getElementById('previewContent').innerHTML = html;
+    }
+
+    function toggleAllPreview(chk) {
+        document.querySelectorAll('.chk-preview-row').forEach(c => c.checked = chk.checked);
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function fmtNum(val) {
+        if (val === null || val === undefined) return '';
+        return Number(val).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    }
+</script>
+}

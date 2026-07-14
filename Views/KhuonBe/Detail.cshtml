@@ -1,0 +1,122 @@
+@model KhoQuanLy.Models.Entities.KhuonBe
+@{ ViewData["Title"] = "Khuôn: " + Model.TenKhuon; }
+<div class="d-flex gap-2 mb-3">
+  <a href="/KhuonBe" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Danh sách</a>
+  <button class="btn-outline btn-sm" onclick="openGhiNhan()"><i class="bi bi-plus-circle"></i> Ghi nhận sử dụng</button>
+  @if(Model.TrangThai=="dang_dung"){
+    <button class="btn-danger btn-sm" onclick="danhDauHong()">⚠ Đánh dấu hỏng</button>
+  }
+  @if(Model.TrangThai=="hong"){
+    <button class="btn-primary btn-sm" onclick="taoVersionThayThe()"><i class="bi bi-arrow-repeat"></i> Tạo version thay thế</button>
+  }
+</div>
+<div class="card mb-3">
+  <div class="card-header">
+    <span class="card-title">✂️ @Model.TenKhuon <span class="badge badge-gray">v@(Model.PhienBan)</span></span>
+    <span class="badge @(Model.TrangThai=="dang_dung"?"badge-green":Model.TrangThai=="hong"?"badge-red":"badge-gray")">
+      @(Model.TrangThai switch{"dang_dung"=>"Đang dùng","hong"=>"Hỏng","nghi_huu"=>"Nghỉ hưu",_=>Model.TrangThai})
+    </span>
+  </div>
+  <div class="row g-3" style="font-size:.875rem">
+    <div class="col-sm-3"><span class="text-muted">Mã khuôn:</span> <strong>@Model.MaKhuon</strong></div>
+    <div class="col-sm-3"><span class="text-muted">Vật tư liên kết:</span> @(string.IsNullOrWhiteSpace(Model.TenVatTu) ? "—" : Model.TenVatTu)</div>
+    <div class="col-sm-3"><span class="text-muted">NCC:</span> @Model.TenNcc</div>
+    <div class="col-sm-3"><span class="text-muted">Ngày bắt đầu:</span> @Model.NgayBatDau?.ToString("dd/MM/yyyy")</div>
+    <div class="col-sm-3"><span class="text-muted">Phiếu SP đầu:</span> @Model.SoPhieuDau</div>
+    <div class="col-sm-3"><span class="text-muted">Đã in:</span> <strong>@Model.SoToDaIn.ToString("N0") tờ</strong></div>
+    <div class="col-sm-3"><span class="text-muted">Định mức:</span> @Model.DinhMucTuoiTho?.ToString("N0") tờ</div>
+    <div class="col-sm-3"><span class="text-muted">Tuổi thọ:</span>
+      @if(Model.DinhMucTuoiTho.HasValue){
+        var pct = Model.PhanTramTuoiTho;
+        <span class="@(pct>=90?"text-danger":pct>=70?"text-warning":"text-success")">@pct%</span>
+      }
+    </div>
+    @if(Model.TrangThai=="hong"){
+      <div class="col-sm-3"><span class="text-muted">Ngày hỏng:</span> @Model.NgayHong?.ToString("dd/MM/yyyy")</div>
+    }
+    @if(!string.IsNullOrEmpty(Model.GhiChu)){
+      <div class="col-12"><span class="text-muted">Ghi chú:</span> @Model.GhiChu</div>
+    }
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">📋 Lịch sử sử dụng</span></div>
+  <table class="tbl">
+    <thead><tr><th>Số phiếu SP</th><th>Tên SP</th><th class="text-end">Số tờ in</th><th>Ngày sử dụng</th><th>Ghi chú</th></tr></thead>
+    <tbody>
+    @foreach(var r in (IEnumerable<KhoQuanLy.Models.Entities.KhuonBeLichSu>)ViewBag.LichSu){
+      <tr>
+        <td><strong>@r.SoPhieu</strong></td><td>@r.TenSanPham</td>
+        <td class="text-end">@r.SoToIn.ToString("N0")</td>
+        <td class="text-muted">@r.NgaySuDung?.ToString("dd/MM/yyyy")</td>
+        <td class="text-muted">@r.GhiChu</td>
+      </tr>
+    }
+    @if(!(ViewBag.LichSu as IEnumerable<KhoQuanLy.Models.Entities.KhuonBeLichSu>)?.Any() ?? true){
+      <tr><td colspan="5" class="text-center text-muted py-4">Chưa có lịch sử</td></tr>
+    }
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal ghi nhận sử dụng -->
+<div class="modal fade" id="modalGhiNhan" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Ghi nhận sử dụng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="form-label">Phiếu sản phẩm</label>
+          <select id="gnPsp" class="form-select form-select-sm">
+            <option value="">-- Chọn --</option>
+          </select></div>
+        <div class="mb-2"><label class="form-label">Số tờ in</label>
+          <input id="gnSoTo" class="form-control" type="number" placeholder="0"/></div>
+        <div class="mb-2"><label class="form-label">Ngày sử dụng</label>
+          <input id="gnNgay" class="form-control" type="date"/></div>
+        <div><label class="form-label">Ghi chú</label>
+          <input id="gnGhiChu" class="form-control form-control-sm"/></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn-primary btn-sm" onclick="saveGhiNhan()">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts{<script>
+let mGN=null;
+function openGhiNhan(){
+  document.getElementById('gnNgay').value=new Date().toISOString().slice(0,10);
+  mGN=new bootstrap.Modal(document.getElementById('modalGhiNhan'));mGN.show();
+}
+async function saveGhiNhan(){
+  const form=new FormData();
+  form.append('IdKhuonBe',@Model.Id);
+  form.append('IdPhieuSp',document.getElementById('gnPsp').value||0);
+  form.append('SoToIn',document.getElementById('gnSoTo').value);
+  form.append('NgaySuDung',document.getElementById('gnNgay').value);
+  form.append('GhiChu',document.getElementById('gnGhiChu').value);
+  const res=await fetch('/KhuonBe/GhiNhanSuDung',{method:'POST',body:form});
+  const j=await res.json();
+  if(j.ok){mGN.hide();toast('Đã lưu!');location.reload();}
+  else toast('Lỗi!','err');
+}
+async function danhDauHong(){
+  const ngay=prompt('Ngày hỏng (YYYY-MM-DD):',new Date().toISOString().slice(0,10));
+  if(!ngay)return;
+  const form=new FormData();form.append('id',@Model.Id);form.append('ngayHong',ngay);
+  const res=await fetch('/KhuonBe/DanhDauHong',{method:'POST',body:form});
+  const j=await res.json();if(j.ok){toast('Đã cập nhật!');location.reload();}
+}
+async function taoVersionThayThe(){
+  if(!confirm('Tạo version mới thay thế cho khuôn hỏng này?')) return;
+  const form=new FormData();form.append('id',@Model.Id);
+  const res=await fetch('/KhuonBe/TaoVersionThayThe',{method:'POST',body:form});
+  const j=await res.json();
+  if(j.ok){toast('Đã tạo version thay thế!');location='/KhuonBe/Detail/'+j.id;}
+  else toast(j.msg||'Không tạo được version thay thế','err');
+}
+</script>}

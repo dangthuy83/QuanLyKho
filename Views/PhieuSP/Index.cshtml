@@ -1,0 +1,52 @@
+@model KhoQuanLy.Models.ViewModels.PhieuSPListVM
+@{ ViewData["Title"] = "Phiếu sản phẩm"; }
+@{
+  string TtBadge(string tt) => tt switch {
+    "cho_xuat"       => "<span class='badge badge-yellow'>Chờ xuất</span>",
+    "da_xuat"        => "<span class='badge badge-blue'>Đã xuất</span>",
+    "hoan_thanh"     => "<span class='badge badge-green'>Hoàn thành</span>",
+    "chua_hoan_thanh"=> "<span class='badge badge-red'>Chưa HT</span>",
+    _                => "<span class='badge badge-gray'>"+tt+"</span>"
+  };
+}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-file-earmark-text me-2"></i>Phiếu sản phẩm / LSX</span>
+    <div class="d-flex gap-2">
+      <a href="/PhieuSP/Create" class="btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Tạo mới</a>
+      <a href="/PhieuSP/Upload" class="btn-outline btn-sm"><i class="bi bi-upload"></i> Import PDF</a>
+    </div>
+  </div>
+  <form method="get" class="d-flex gap-2 mb-3 flex-wrap">
+    <input name="search" value="@Model.FilterSearch" class="form-control" style="max-width:220px" placeholder="Tìm số phiếu, tên SP..."/>
+    <select name="trangThai" class="form-select" style="max-width:160px" onchange="this.form.submit()">
+      <option value="">Tất cả trạng thái</option>
+      <option value="cho_xuat" selected="@(Model?.FilterTrangThai == "cho_xuat" ? "selected" : null)">Chờ xuất</option>
+      <option value="da_xuat" selected="@(Model?.FilterTrangThai == "da_xuat" ? "selected" : null)">Đã xuất</option>
+      <option value="hoan_thanh" selected="@(Model?.FilterTrangThai == "hoan_thanh" ? "selected" : null)">Hoàn thành</option>
+      <option value="chua_hoan_thanh" selected="@(Model?.FilterTrangThai == "chua_hoan_thanh" ? "selected" : null)">Chưa HT</option>
+    </select>
+    <button type="submit" class="btn-outline btn-sm"><i class="bi bi-search"></i></button>
+  </form>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Số phiếu</th><th>Số LSX</th><th>Tên sản phẩm</th><th>Khách hàng</th><th class="text-end">SL SP</th><th>Ngày lệnh</th><th>Ngày giao</th><th>TT</th><th style="width:60px"></th></tr></thead>
+      <tbody>
+      @foreach(var r in Model.Items){
+        <tr>
+          <td><a href="/PhieuSP/Detail/@r.Id" class="fw-bold text-decoration-none">@r.SoPhieu</a></td>
+          <td class="text-muted">@r.SoLsx</td>
+          <td>@r.TenSanPham</td>
+          <td class="text-muted">@r.KhachHang</td>
+          <td class="text-end">@r.SoLuongSp?.ToString("N0")</td>
+          <td class="text-muted">@r.NgayLenh?.ToString("dd/MM/yyyy")</td>
+          <td class="text-muted">@r.NgayGiaoHang?.ToString("dd/MM/yyyy")</td>
+          <td>@Html.Raw(TtBadge(r.TrangThai))</td>
+          <td><a href="/PhieuSP/Detail/@r.Id" class="btn-icon"><i class="bi bi-eye"></i></a></td>
+        </tr>
+      }
+      @if(!Model.Items.Any()){<tr><td colspan="9" class="text-center text-muted py-4">Không có phiếu nào</td></tr>}
+      </tbody>
+    </table>
+  </div>
+</div>

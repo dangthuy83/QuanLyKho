@@ -1,0 +1,47 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.DinhMucTieuHao>
+@{ ViewData["Title"] = "Định mức & Tiêu hao"; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-sliders me-2"></i>Định mức tiêu hao</span>
+    <div class="d-flex gap-2">
+      <a href="/DinhMuc/TieuHao" class="btn-outline btn-sm"><i class="bi bi-bar-chart"></i> Xem tiêu hao</a>
+      <button class="btn-primary btn-sm" onclick="openModal('Thêm định mức','/DinhMuc/DinhMucForm')">
+        <i class="bi bi-plus-lg"></i> Thêm định mức
+      </button>
+    </div>
+  </div>
+  <table class="tbl">
+    <thead>
+      <tr><th>#</th><th>Vật tư</th><th>Loại định mức</th><th>Tên SP (nếu có)</th>
+        <th class="text-end">Định mức/1000 tờ</th><th>ĐVT</th><th>Ghi chú</th><th>TT</th>
+        <th style="width:70px">Thao tác</th></tr>
+    </thead>
+    <tbody>
+    @foreach(var (r,i) in Model.Select((x,i)=>(x,i+1))){
+      <tr>
+        <td class="text-muted">@i</td>
+        <td><strong>@r.TenVt</strong></td>
+        <td><span class="badge @(r.LoaiDinhMuc=="theo_to_in"?"badge-blue":"badge-cyan")">
+          @(r.LoaiDinhMuc=="theo_to_in"?"Theo tờ in":"Theo SP")
+        </span></td>
+        <td class="text-muted">@r.TenSanPham</td>
+        <td class="text-end">@r.DinhMucTren1000To?.ToString("N4")</td>
+        <td>@r.DonViTinh</td>
+        <td class="text-muted">@r.GhiChu</td>
+        <td><span class="badge @(r.IsActive?"badge-green":"badge-gray")">@(r.IsActive?"Áp dụng":"Tắt")</span></td>
+        <td>
+          <button class="btn-icon" onclick="openModal('Sửa định mức','/DinhMuc/DinhMucForm?id=@r.Id')">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn-icon del" onclick="confirmAction('Xóa định mức này?','/DinhMuc/DinhMucDelete?id=@r.Id')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    }
+    @if(!Model.Any()){
+      <tr><td colspan="9" class="text-center text-muted py-4">Chưa có định mức nào</td></tr>
+    }
+    </tbody>
+  </table>
+</div>

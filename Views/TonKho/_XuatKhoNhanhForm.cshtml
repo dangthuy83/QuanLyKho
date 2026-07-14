@@ -1,0 +1,24 @@
+@model KhoQuanLy.Models.Entities.VatTu
+<form id="fXkn" asp-action="XuatKhoNhanh" asp-controller="TonKho" method="post">
+  <input type="hidden" name="idVatTu" value="@Model.Id"/>
+  <div class="mb-2">
+    <div class="text-muted small">Vật tư</div>
+    <strong>@Model.TenVt</strong> <span class="text-muted">(@Model.MaVt)</span>
+  </div>
+  <div class="mb-2">
+    <div class="text-muted small">Tồn kho hiện tại</div>
+    <strong>@Model.TonKhoHienTai.ToString("N3") @Model.DonViTinh</strong>
+  </div>
+  <div class="mb-2">
+    <label class="form-label">Số lượng xuất <span class="text-danger">*</span></label>
+    <input name="soLuong" class="form-control form-control-sm" type="number" step="0.001" min="0.001" max="@Model.TonKhoHienTai" required/>
+  </div>
+  <div class="mb-2">
+    <label class="form-label">Lý do <span class="text-danger">*</span></label>
+    <input name="lyDo" class="form-control form-control-sm" placeholder="VD: Cấp keo cho xưởng gia công" required/>
+  </div>
+  <div class="d-flex justify-content-end gap-2 mt-3">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn-primary btn-sm" onclick="submitForm('fXkn')"><i class="bi bi-box-arrow-up"></i> Xuất kho</button>
+  </div>
+</form>

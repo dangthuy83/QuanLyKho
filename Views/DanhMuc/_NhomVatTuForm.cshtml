@@ -1,0 +1,17 @@
+@model KhoQuanLy.Models.ViewModels.NhomVatTuVM
+<form id="fNhom" asp-action="NhomVatTuSave" asp-controller="DanhMuc" method="post">
+  <input type="hidden" asp-for="Id"/>
+  <div class="mb-3">
+    <label asp-for="TenNhom" class="form-label"></label>
+    <input asp-for="TenNhom" class="form-control" placeholder="VD: Giấy cuộn"/>
+    <span asp-validation-for="TenNhom" class="text-danger small"></span>
+  </div>
+  <div class="mb-3">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="2"></textarea>
+  </div>
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn-primary btn-sm" onclick="submitForm('fNhom')"><i class="bi bi-check-lg"></i> Lưu</button>
+  </div>
+</form>

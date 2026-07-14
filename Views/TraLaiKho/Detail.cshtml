@@ -1,0 +1,26 @@
+@model (KhoQuanLy.Models.Entities.PhieuTraLai, List<KhoQuanLy.Models.Entities.PhieuTraLaiCt>)
+@{ ViewData["Title"] = "Phiếu trả: " + Model.Item1.SoPhieu; }
+<div class="d-flex gap-2 mb-3"><a href="/TraLaiKho" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Danh sách</a></div>
+<div class="card mb-3">
+  <div class="card-header"><span class="card-title">↩️ @Model.Item1.SoPhieu — @Model.Item1.NgayTra.ToString("dd/MM/yyyy")</span></div>
+  <div class="row g-2" style="font-size:.875rem">
+    <div class="col-sm-4"><span class="text-muted">Lý do:</span> <strong>@Model.Item1.LyDo</strong></div>
+    <div class="col-sm-4"><span class="text-muted">Ghi chú:</span> @Model.Item1.GhiChu</div>
+    <div class="col-sm-4"><span class="text-muted">Người tạo:</span> @Model.Item1.NguoiTao</div>
+  </div>
+</div>
+<div class="card">
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Vật tư</th><th>ĐVT</th><th>PSP liên kết</th><th class="text-end">Số lượng trả</th><th>Ghi chú</th></tr></thead>
+    <tbody>
+    @foreach(var (r,i) in Model.Item2.Select((x,i)=>(x,i+1))){
+      <tr>
+        <td class="text-muted">@i</td><td><strong>@r.TenVt</strong></td><td>@r.DonViTinh</td>
+        <td class="text-muted">@r.SoPhieuSp</td>
+        <td class="text-end text-danger fw-bold">-@r.SoLuong.ToString("N3")</td>
+        <td class="text-muted">@r.GhiChu</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>

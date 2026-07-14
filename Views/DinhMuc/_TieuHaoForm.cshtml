@@ -1,0 +1,43 @@
+@model KhoQuanLy.Models.ViewModels.TieuHaoVM
+<form id="fTh" asp-action="TieuHaoSave" asp-controller="DinhMuc" method="post">
+  <input type="hidden" asp-for="Id"/>
+  <div class="mb-2">
+    <label asp-for="IdVatTu" class="form-label"></label>
+    <select asp-for="IdVatTu" class="form-select form-select-sm" asp-items="Model.VatTuList">
+      <option value="">-- Chọn vật tư --</option>
+    </select>
+    <span asp-validation-for="IdVatTu" class="text-danger small"></span>
+  </div>
+  <div class="row g-2 mb-2">
+    <div class="col-6">
+      <label asp-for="ThangInThucTe" class="form-label"></label>
+      <input asp-for="ThangInThucTe" class="form-control form-control-sm" type="month"
+             value="@(Model.ThangInThucTe?.ToString("yyyy-MM") ?? DateTime.Today.ToString("yyyy-MM"))"/>
+    </div>
+    <div class="col-6">
+      <label asp-for="SoToIn" class="form-label"></label>
+      <input asp-for="SoToIn" class="form-control form-control-sm" type="number" placeholder="Tờ in tháng đó"/>
+    </div>
+  </div>
+  <div class="mb-2">
+    <label asp-for="SoLuongTieuHao" class="form-label"></label>
+    <input asp-for="SoLuongTieuHao" class="form-control form-control-sm" type="number" step="0.001"/>
+    <span asp-validation-for="SoLuongTieuHao" class="text-danger small"></span>
+  </div>
+  <div class="mb-2">
+    <label asp-for="IdPhieuXkTc" class="form-label"></label>
+    <select asp-for="IdPhieuXkTc" class="form-select form-select-sm" asp-items="Model.PhieuXkList">
+      <option value="">-- Không liên kết --</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label asp-for="GhiChu" class="form-label"></label>
+    <input asp-for="GhiChu" class="form-control form-control-sm"/>
+  </div>
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn-primary btn-sm" onclick="submitForm('fTh')">
+      <i class="bi bi-check-lg"></i> Lưu
+    </button>
+  </div>
+</form>

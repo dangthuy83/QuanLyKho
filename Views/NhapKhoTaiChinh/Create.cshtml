@@ -1,0 +1,170 @@
+@model KhoQuanLy.Models.ViewModels.PhieuXKTCVM
+@using KhoQuanLy.Models.Entities
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+  ViewData["Title"] = "Nhập Kho Tài Chính";
+  ViewData["Subtitle"] = "Nhập tay 1 phiếu nhận vật tư từ Tài chính";
+  var vatTuList = ((IEnumerable<VatTu>)ViewBag.VatTuList).ToList();
+  var phieuSpList = (IEnumerable<SelectListItem>)ViewBag.PhieuSpList;
+  var nccList = (IEnumerable<SelectListItem>)ViewBag.NccList;
+}
+<form method="post" asp-action="Create" asp-controller="NhapKhoTaiChinh">
+  <div class="card mb-3">
+    <div class="card-header"><span class="card-title">Thông tin phiếu</span></div>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Số phiếu <span class="text-danger">*</span></label>
+        <input asp-for="SoPhieu" class="form-control" placeholder="VT0230"/>
+        <span asp-validation-for="SoPhieu" class="text-danger small"></span>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Ngày nhập <span class="text-danger">*</span></label>
+        <input asp-for="NgayXuat" class="form-control" type="date"/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Bộ phận nhận</label>
+        <select asp-for="BoPhanNhan" class="form-select" asp-items="Model.BoPhanList">
+          <option value="">-- Chọn --</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Lý do nhận</label>
+        <input asp-for="LyDoXuat" class="form-control"/>
+      </div>
+    </div>
+  </div>
+  <div class="card mb-3">
+    <div class="card-header">
+      <span class="card-title">Chi tiết vật tư</span>
+      <div class="d-flex gap-2 flex-wrap" >
+        <button type="button" class="btn-sm btn-primary" onclick="openQuickVatTuModal()" ><i class="bi bi-box-seam"></i> Thêm danh mục vật tư mới</button>
+        <button type="button" class="btn-outline btn-sm" onclick="addRowXK()"><i class="bi bi-plus-lg"></i> Thêm dòng chi tiết nhập kho</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="tbl"><thead><tr><th style="min-width:320px">Tên vật tư</th><th style="min-width:220px">Số PSP</th><th style="min-width:220px">Nhà cung cấp</th><th class="text-end">SL chứng từ</th><th class="text-end">SL thực tế</th><th>ĐVT</th><th style="width:35px"></th></tr></thead>
+      <tbody id="xkBody">
+        <tr id="xkrow-0">
+          <td>
+            <input name="moTa" class="form-control form-control-sm vt-search" list="vatTuOptions" placeholder="Gõ mã hoặc tên vật tư..." autocomplete="off" oninput="onVatTuSearch(this)" onchange="onVatTuSearch(this)"/>
+            <input name="idVatTu" type="hidden"/>
+            @*<div class="form-text">Chọn từ danh mục kho vật tư; tên và ĐVT sẽ tự lấy theo vật tư.</div>*@
+          </td>
+          <td>
+            <input class="form-control form-control-sm psp-search" list="phieuSpOptions" placeholder="Gõ số PSP..." autocomplete="off" oninput="onPhieuSpSearch(this)" onchange="onPhieuSpSearch(this)"/>
+            <input name="idPhieuSp" type="hidden"/>
+          </td>
+          <td>
+            <input class="form-control form-control-sm ncc-search" list="nccOptions" placeholder="Gõ tên NCC..." autocomplete="off" oninput="onNccSearch(this)" onchange="onNccSearch(this)"/>
+            <input name="idNhaCungCap" type="hidden"/>
+          </td>
+          <td><input name="slChungTu" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+          <td><input name="slThucTe" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+          <td><input name="dvt" class="form-control form-control-sm" style="width:70px" placeholder="ĐVT" readonly/></td>
+          <td><button type="button" class="btn-icon del" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>
+        </tr>
+      </tbody></table>
+      <datalist id="vatTuOptions">
+        @foreach(var vt in vatTuList){<option value="@vt.MaVt - @vt.TenVt"></option>}
+      </datalist>
+      <datalist id="phieuSpOptions">
+        @foreach(var p in phieuSpList){<option value="@p.Text"></option>}
+      </datalist>
+      <datalist id="nccOptions">
+        @foreach(var n in nccList){<option value="@n.Text"></option>}
+      </datalist>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn-primary"><i class="bi bi-check-lg"></i> Lưu phiếu</button>
+    <a href="/NhapKhoTaiChinh" class="btn-outline">Hủy</a>
+  </div>
+</form>
+@section Scripts{<script>
+let xkIdx=1;
+let vatTus=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(vatTuList.Select(v=>new{ id=v.Id, maVt=v.MaVt, tenVt=v.TenVt, donViTinh=v.DonViTinh })));
+const phieuSps=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(phieuSpList.Select(i=>new{ id=i.Value, text=i.Text })));
+const nhaCungCaps=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(nccList.Select(i=>new{ id=i.Value, text=i.Text })));
+
+function normalizeText(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+}
+
+function findVatTu(value){
+  const q=normalizeText(value);
+  if(!q)return null;
+  return vatTus.find(v=>normalizeText(`${v.maVt} - ${v.tenVt}`)===q)
+      || vatTus.find(v=>normalizeText(v.maVt)===q)
+      || vatTus.find(v=>normalizeText(v.tenVt)===q);
+}
+
+function onVatTuSearch(input){
+  const tr=input.closest('tr');
+  const hidden=tr.querySelector('input[name="idVatTu"]');
+  const dvt=tr.querySelector('input[name="dvt"]');
+  const vt=findVatTu(input.value);
+  if(vt){
+    hidden.value=vt.id;
+    input.value=`${vt.maVt} - ${vt.tenVt}`;
+    dvt.value=vt.donViTinh||'';
+  }else{
+    hidden.value='';
+    dvt.value='';
+  }
+}
+
+function onPhieuSpSearch(input){
+  const tr=input.closest('tr');
+  const hidden=tr.querySelector('input[name="idPhieuSp"]');
+  const psp=phieuSps.find(x=>normalizeText(x.text)===normalizeText(input.value));
+  if(psp){hidden.value=psp.id;input.value=psp.text;}else hidden.value='';
+}
+
+function onNccSearch(input){
+  const tr=input.closest('tr');
+  const hidden=tr.querySelector('input[name="idNhaCungCap"]');
+  const ncc=nhaCungCaps.find(x=>normalizeText(x.text)===normalizeText(input.value));
+  if(ncc){hidden.value=ncc.id;input.value=ncc.text;}else hidden.value='';
+}
+
+function renderVatTuOptions(){
+  const dl=document.getElementById('vatTuOptions');
+  if(!dl)return;
+  dl.innerHTML=vatTus.map(v=>`<option value="${escapeHtml(`${v.maVt} - ${v.tenVt}`)}"></option>`).join('');
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+async function reloadVatTuOptions(){
+  const res=await fetch('/NhapKhoTaiChinh/GetVatTuOptions');
+  if(!res.ok){toast('Không tải lại được danh sách vật tư','err');return;}
+  vatTus=await res.json();
+  renderVatTuOptions();
+}
+
+function openQuickVatTuModal(){
+  window.quickVatTuSavedCallback=async()=>{
+    await reloadVatTuOptions();
+    toast('Đã thêm vật tư và cập nhật danh sách chọn!');
+  };
+  openModal('Thêm vật tư','/DanhMuc/VatTuForm','modal-lg');
+}
+
+function addRowXK(){
+  const i=xkIdx++;
+  const tr=document.createElement('tr');tr.id='xkrow-'+i;
+  tr.innerHTML=`<td>
+      <input name="moTa" class="form-control form-control-sm vt-search" list="vatTuOptions" placeholder="Gõ mã hoặc tên vật tư..." autocomplete="off" oninput="onVatTuSearch(this)" onchange="onVatTuSearch(this)"/>
+      <input name="idVatTu" type="hidden"/>
+    </td>
+    <td><input class="form-control form-control-sm psp-search" list="phieuSpOptions" placeholder="Gõ số PSP..." autocomplete="off" oninput="onPhieuSpSearch(this)" onchange="onPhieuSpSearch(this)"/><input name="idPhieuSp" type="hidden"/></td>
+    <td><input class="form-control form-control-sm ncc-search" list="nccOptions" placeholder="Gõ tên NCC..." autocomplete="off" oninput="onNccSearch(this)" onchange="onNccSearch(this)"/><input name="idNhaCungCap" type="hidden"/></td>
+    <td><input name="slChungTu" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+    <td><input name="slThucTe" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+    <td><input name="dvt" class="form-control form-control-sm" style="width:70px" placeholder="ĐVT" readonly/></td>
+    <td><button type="button" class="btn-icon del" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>`;
+  document.getElementById('xkBody').appendChild(tr);
+}
+</script>}

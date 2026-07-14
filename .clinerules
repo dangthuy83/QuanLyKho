@@ -1,0 +1,27 @@
+# Quy tắc làm việc của dự án
+
+Bạn là lập trình viên Senior ASP.NET Core MVC.
+
+Mỗi khi bắt đầu một nhiệm vụ:
+
+1. Đọc toàn bộ thư mục memory-bank.
+2. Hiểu kiến trúc dự án trước khi sửa code.
+3. Cập nhật memory-bank sau khi có thay đổi lớn.
+4. giao tiếp bằng ngôn ngữ tiếng việt
+Quy tắc code:
+
+- Framework: ASP.NET Core MVC .NET 8
+- Database: MySQL
+- Giao diện: Bootstrap 5
+- Controller chỉ xử lý request và response.
+- Toàn bộ nghiệp vụ đặt trong Service.
+- Tách riêng Entity Model và ViewModel.
+- Áp dụng Dependency Injection.
+- Ưu tiên code dễ bảo trì.
+- Không tự ý đổi cấu trúc dự án nếu chưa phân tích ảnh hưởng.
+
+Nếu chưa có thư mục memory-bank:
+
+- Phân tích toàn bộ source code.
+- Tạo thư mục memory-bank.
+- Sinh toàn bộ tài liệu cần thiết.

@@ -1,0 +1,67 @@
+@model KhoQuanLy.Models.ViewModels.PhieuXKTCVM
+@{ ViewData["Title"] = "Nhập phiếu XK TC"; }
+<form method="post" asp-action="Create" asp-controller="PhieuXKTC">
+  <div class="card mb-3">
+    <div class="card-header"><span class="card-title">Thông tin phiếu</span></div>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Số phiếu <span class="text-danger">*</span></label>
+        <input asp-for="SoPhieu" class="form-control" placeholder="VT0230"/>
+        <span asp-validation-for="SoPhieu" class="text-danger small"></span>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Ngày xuất <span class="text-danger">*</span></label>
+        <input asp-for="NgayXuat" class="form-control" type="date"/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Bộ phận nhận</label>
+        <select asp-for="BoPhanNhan" class="form-select" asp-items="Model.BoPhanList">
+          <option value="">-- Chọn --</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Lý do xuất</label>
+        <input asp-for="LyDoXuat" class="form-control"/>
+      </div>
+    </div>
+  </div>
+  <div class="card mb-3">
+    <div class="card-header">
+      <span class="card-title">Chi tiết vật tư</span>
+      <button type="button" class="btn-outline btn-sm" onclick="addRowXK()"><i class="bi bi-plus-lg"></i> Thêm dòng</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="tbl"><thead><tr><th>Mô tả vật tư</th><th>Vật tư liên kết</th><th>Số PSP</th><th class="text-end">SL chứng từ</th><th class="text-end">SL thực tế</th><th>ĐVT</th><th style="width:35px"></th></tr></thead>
+      <tbody id="xkBody">
+        <tr id="xkrow-0">
+          <td><input name="moTa" class="form-control form-control-sm" placeholder="Tên vật tư..."/></td>
+          <td><select name="idVatTu" class="form-select form-select-sm"><option value="">-- Chọn --</option></select></td>
+          <td><select name="idPhieuSp" class="form-select form-select-sm"><option value="">-- Không --</option></select></td>
+          <td><input name="slChungTu" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+          <td><input name="slThucTe" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+          <td><input name="dvt" class="form-control form-control-sm" value="Kg" style="width:55px"/></td>
+          <td><button type="button" class="btn-icon del" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>
+        </tr>
+      </tbody></table>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn-primary"><i class="bi bi-check-lg"></i> Lưu phiếu</button>
+    <a href="/PhieuXKTC" class="btn-outline">Hủy</a>
+  </div>
+</form>
+@section Scripts{<script>
+let xkIdx=1;
+function addRowXK(){
+  const i=xkIdx++;
+  const tr=document.createElement('tr');tr.id='xkrow-'+i;
+  tr.innerHTML=`<td><input name="moTa" class="form-control form-control-sm"/></td>
+    <td><select name="idVatTu" class="form-select form-select-sm"><option value="">-- Chọn --</option></select></td>
+    <td><select name="idPhieuSp" class="form-select form-select-sm"><option value="">-- Không --</option></select></td>
+    <td><input name="slChungTu" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+    <td><input name="slThucTe" class="form-control form-control-sm text-end" type="number" step="0.001" value="0"/></td>
+    <td><input name="dvt" class="form-control form-control-sm" value="Kg" style="width:55px"/></td>
+    <td><button type="button" class="btn-icon del" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>`;
+  document.getElementById('xkBody').appendChild(tr);
+}
+</script>}

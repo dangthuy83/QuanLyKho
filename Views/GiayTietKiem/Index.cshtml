@@ -1,0 +1,61 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.GiayTietKiem>
+@{ ViewData["Title"] = "Giấy tiết kiệm"; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-piggy-bank me-2"></i>Theo dõi giấy tiết kiệm</span>
+    <button class="btn-primary btn-sm" onclick="openModal('Thêm giấy tiết kiệm','/GiayTietKiem/Form')">
+      <i class="bi bi-plus-lg"></i> Thêm
+    </button>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>#</th><th>Số phiếu SP</th><th>Tên sản phẩm</th><th>Giấy cuộn</th>
+          <th class="text-end">Kg yêu cầu</th><th class="text-end">Kg thực xả</th>
+          <th class="text-end">Kg tiết kiệm</th><th>TP bù</th><th>Ngày</th>
+          <th style="width:70px" class="no-print">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach(var (r,i) in Model.Select((x,i)=>(x,i+1))){
+        <tr>
+          <td class="text-muted">@i</td>
+          <td><strong>@r.SoPhieu</strong></td>
+          <td>@r.TenSanPham</td>
+          <td class="text-muted">@r.TenVt</td>
+          <td class="text-end">@r.KgYeuCau.ToString("N3")</td>
+          <td class="text-end">@r.KgThucXa.ToString("N3")</td>
+          <td class="text-end fw-bold @(r.KgTietKiem>0?"text-success":"text-danger")">
+            @r.KgTietKiem.ToString("N3")
+          </td>
+          <td class="text-muted">@r.TenThanhPhamBu</td>
+          <td class="text-muted">@r.CreatedAt.ToString("dd/MM/yy")</td>
+          <td>
+            <button class="btn-icon" onclick="openModal('Sửa giấy tiết kiệm','/GiayTietKiem/Form?id=@r.Id')" title="Sửa">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn-icon del" onclick="confirmAction('Xóa bản ghi này?','/GiayTietKiem/Delete?id=@r.Id')" title="Xóa">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      }
+      @if(!Model.Any()){
+        <tr><td colspan="10" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr>
+      }
+      </tbody>
+      @if(Model.Any()){
+        <tfoot>
+          <tr style="background:#f8fafc;font-weight:600">
+            <td colspan="4" class="text-end text-muted">Tổng:</td>
+            <td class="text-end">@Model.Sum(x=>x.KgYeuCau).ToString("N3")</td>
+            <td class="text-end">@Model.Sum(x=>x.KgThucXa).ToString("N3")</td>
+            <td class="text-end text-success">@Model.Sum(x=>x.KgTietKiem).ToString("N3")</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      }
+    </table>
+  </div>
+</div>

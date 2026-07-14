@@ -1,0 +1,16 @@
+bin/
+obj/
+.vs/
+node_modules/
+packages/
+
+**/*.dll
+**/*.exe
+**/*.pdb
+**/*.cache
+
+wwwroot/lib/
+wwwroot/dist/
+
+publish/
+artifacts/

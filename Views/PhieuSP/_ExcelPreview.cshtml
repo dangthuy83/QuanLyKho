@@ -1,0 +1,48 @@
+@model KhoQuanLy.Models.ViewModels.ExcelPreviewVM
+
+<div class="mb-2 text-muted small">
+    File: <strong>@Model.TenFile</strong> |
+    Tổng số PSP: <strong>@Model.SoPsp</strong> |
+    Tổng dòng vật tư: <strong>@Model.TongDong</strong>
+</div>
+
+<div class="table-responsive" style="max-height:400px;overflow-y:auto">
+    <table class="tbl table-sm">
+        <thead>
+            <tr>
+                <th>Số phiếu</th>
+                <th>Tên SP</th>
+                <th>KH</th>
+                <th class="text-end">SL SP</th>
+                <th>Tên vật tư</th>
+                <th>Kích thước</th>
+                <th class="text-end">SL tờ rời</th>
+                <th class="text-end">SL yêu cầu</th>
+                <th>ĐVT</th>
+                <th>Cảnh báo</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var r in Model.Rows)
+        {
+            <tr class="@(r.DaTonTai ? "table-warning" : "")">
+                <td>@r.SoPhieu</td>
+                <td>@r.TenSanPham</td>
+                <td>@r.KhachHang</td>
+                <td class="text-end">@r.SoLuongSp?.ToString("N0")</td>
+                <td>@r.TenVatTu</td>
+                <td>@r.KichThuoc</td>
+                <td class="text-end">@r.SoLuongToRoi?.ToString("N0")</td>
+                <td class="text-end">@r.SoLuongYeuCau.ToString("N3")</td>
+                <td>@r.DonViTinh</td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(r.CanhBao))
+                    {
+                        <span class="badge bg-warning text-dark">@r.CanhBao</span>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

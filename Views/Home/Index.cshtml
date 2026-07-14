@@ -1,0 +1,66 @@
+@model KhoQuanLy.Models.ViewModels.DashboardVM
+@{ ViewData["Title"] = "Tổng quan"; }
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#dbeafe">📦</div>
+      <div><div class="stat-value">@Model.TongVatTu</div><div class="stat-label">Tổng vật tư</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fee2e2">⚠️</div>
+      <div><div class="stat-value text-danger">@Model.VatTuTonThap</div><div class="stat-label">Tồn dưới mức tối thiểu</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef3c7">📄</div>
+      <div><div class="stat-value">@Model.PhieuSpHoanThanh</div><div class="stat-label">Phiếu SP đã hoàn thành</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#dcfce7">✂️</div>
+      <div><div class="stat-value">@Model.KhuonBeDangDung</div><div class="stat-label">Khuôn bế đang dùng</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🕐 Giao dịch kho gần đây</span>
+    <a href="/TonKho" class="btn-outline btn-sm">Xem tất cả</a>
+  </div>
+  @if(Model.GiaoDichGanDay.Any()){
+  <table class="tbl">
+    <thead><tr><th>Thời gian</th><th>Vật tư</th><th>Loại GD</th><th class="text-end">Số lượng</th><th class="text-end">Tồn sau</th></tr></thead>
+    <tbody>
+    @foreach(var gd in Model.GiaoDichGanDay.Take(15)){
+      var loaiLabel = gd.LoaiGd switch {
+        "nhap_tc" => "<span class='badge badge-green'>Nhập TC</span>",
+        "nhap_de_nghi" => "<span class='badge badge-green'>Nhập đề nghị</span>",
+        "xuat_khac" => "<span class='badge badge-red'>Xuất kho nhanh</span>",
+        "xuat_tieu_hao" => "<span class='badge badge-red'>Xuất tiêu hao</span>",
+        "xuat_psp" => "<span class='badge badge-blue'>Xuất PSP (cũ)</span>",
+        "tra_lai" => "<span class='badge badge-yellow'>Trả lại</span>",
+        "dieu_chinh" => "<span class='badge badge-gray'>Điều chỉnh</span>",
+        _ => "<span class='badge badge-gray'>" + gd.LoaiGd + "</span>"
+      };
+      <tr>
+        <td class="text-muted" style="white-space:nowrap">@gd.NgayGiaoDich.ToString("dd/MM HH:mm")</td>
+        <td><strong>@gd.TenVt</strong></td>
+        <td>@Html.Raw(loaiLabel)</td>
+        <td class="text-end @(gd.SoLuong>0?"text-success":"text-danger")">
+          @(gd.SoLuong>0?"+":"")@gd.SoLuong.ToString("N3") @gd.DonViTinh
+        </td>
+        <td class="text-end">@gd.TonSau?.ToString("N3")</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+  } else {
+    <p class="text-muted text-center py-3" style="font-size:.875rem">Chưa có giao dịch nào.</p>
+  }
+</div>

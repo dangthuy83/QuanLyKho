@@ -1,0 +1,117 @@
+@model KhoQuanLy.Models.ViewModels.BaoCaoKhuonBeNccVM
+@{ ViewData["Title"] = "Báo cáo khuôn bế theo NCC"; }
+
+<div class="d-flex gap-2 mb-3 flex-wrap">
+  <a href="/BaoCao" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
+  <button onclick="window.print()" class="btn-outline btn-sm"><i class="bi bi-printer"></i> In</button>
+  <a href="/BaoCao/ExportKhuonBeTheoNcc" class="btn-primary btn-sm"><i class="bi bi-file-earmark-excel"></i> Export Excel</a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3 col-6">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-scissors"></i></div>
+      <div><div class="stat-label">Tổng khuôn</div><div class="stat-value">@Model.TongKhuon.ToString("N0")</div></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-check-circle"></i></div>
+      <div><div class="stat-label">Đang dùng</div><div class="stat-value">@Model.TongDangDung.ToString("N0")</div></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card">
+      <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+      <div><div class="stat-label">Hỏng</div><div class="stat-value">@Model.TongHong.ToString("N0")</div></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card">
+      <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-files"></i></div>
+      <div><div class="stat-label">Tổng tờ đã in</div><div class="stat-value">@Model.TongSoToDaIn.ToString("N0")</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <span class="card-title">✂️ So sánh tuổi thọ / hiệu suất khuôn bế theo nhà cung cấp</span>
+  </div>
+  <div class="alert alert-info mb-3" style="font-size:.875rem">
+    <strong>Cách đọc:</strong> Tuổi thọ trung bình = trung bình số tờ đã in/khuôn. % định mức chỉ tính khi khuôn có cấu hình <code>dinh_muc_tuoi_tho</code>.
+    Khuôn cần chú ý gồm khuôn đã hỏng, sắp chạm/vượt 80% định mức hoặc chưa có lịch sử sử dụng.
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Nhà cung cấp</th>
+          <th class="text-end">Tổng khuôn</th>
+          <th class="text-end">Đang dùng</th>
+          <th class="text-end">Hỏng</th>
+          <th class="text-end">Tổng tờ đã in</th>
+          <th class="text-end">Tuổi thọ TB</th>
+          <th class="text-end">Định mức TB</th>
+          <th class="text-end">% định mức</th>
+          <th class="text-end">Cần chú ý</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach(var r in Model.Rows){
+        var pctClass = r.TyLeSuDungDinhMuc >= 90 ? "text-danger" : r.TyLeSuDungDinhMuc >= 70 ? "text-warning" : "text-success";
+        <tr>
+          <td><strong>@r.TenNcc</strong></td>
+          <td class="text-end">@r.TongSoKhuon.ToString("N0")</td>
+          <td class="text-end text-success">@r.SoKhuonDangDung.ToString("N0")</td>
+          <td class="text-end text-danger">@r.SoKhuonHong.ToString("N0")</td>
+          <td class="text-end fw-bold">@r.TongSoToDaIn.ToString("N0")</td>
+          <td class="text-end">@r.TuoiThoTrungBinh.ToString("N0")</td>
+          <td class="text-end">@(r.DinhMucTrungBinh > 0 ? r.DinhMucTrungBinh.ToString("N0") : "—")</td>
+          <td class="text-end @(r.TyLeSuDungDinhMuc > 0 ? pctClass : "text-muted")">@(r.TyLeSuDungDinhMuc > 0 ? r.TyLeSuDungDinhMuc.ToString("N1") + "%" : "—")</td>
+          <td class="text-end"><span class="badge @(r.SoKhuonCanChuY > 0 ? "badge-red" : "badge-green")">@r.SoKhuonCanChuY</span></td>
+        </tr>
+      }
+      @if(!Model.Rows.Any()){
+        <tr><td colspan="9" class="text-center text-muted py-4">Không có dữ liệu khuôn bế</td></tr>
+      }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-exclamation-triangle me-2"></i>Danh sách khuôn hiệu suất thấp / cần chú ý</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Khuôn</th><th>Mã</th><th>Version</th><th>NCC</th><th>Trạng thái</th>
+          <th class="text-end">Đã in</th><th class="text-end">Định mức</th><th class="text-end">Tuổi thọ</th><th>Lý do</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach(var r in Model.CanhBao){
+        var pctClass = r.PhanTramTuoiTho >= 90 ? "text-danger" : r.PhanTramTuoiTho >= 70 ? "text-warning" : "text-muted";
+        <tr>
+          <td><strong>@r.TenKhuon</strong></td>
+          <td><code style="font-size:.78rem">@r.MaKhuon</code></td>
+          <td class="text-center">v@(r.PhienBan)</td>
+          <td>@r.TenNcc</td>
+          <td><span class="badge @(r.TrangThai=="dang_dung"?"badge-green":r.TrangThai=="hong"?"badge-red":"badge-gray")">@(r.TrangThai=="dang_dung"?"Đang dùng":r.TrangThai=="hong"?"Hỏng":r.TrangThai)</span></td>
+          <td class="text-end">@r.SoToDaIn.ToString("N0")</td>
+          <td class="text-end">@(r.DinhMucTuoiTho.HasValue ? r.DinhMucTuoiTho.Value.ToString("N0") : "—")</td>
+          <td class="text-end @pctClass">@(r.DinhMucTuoiTho.HasValue ? r.PhanTramTuoiTho.ToString("N1") + "%" : "—")</td>
+          <td>@r.LyDoCanhBao</td>
+          <td><a href="/KhuonBe/Detail/@r.Id" class="btn-icon" title="Chi tiết"><i class="bi bi-eye"></i></a></td>
+        </tr>
+      }
+      @if(!Model.CanhBao.Any()){
+        <tr><td colspan="10" class="text-center text-muted py-4">Chưa có khuôn cần chú ý</td></tr>
+      }
+      </tbody>
+    </table>
+  </div>
+</div>

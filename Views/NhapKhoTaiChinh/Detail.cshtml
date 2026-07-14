@@ -1,0 +1,47 @@
+@model KhoQuanLy.Models.ViewModels.PhieuXKTCDetailVM
+@{ ViewData["Title"] = "Nhập Kho Tài Chính: " + Model.PhieuXKTC.SoPhieu; }
+<div class="d-flex gap-2 mb-3"><a href="/NhapKhoTaiChinh" class="btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Danh sách</a></div>
+<div class="card mb-3">
+  <div class="card-header"><span class="card-title">📄 @Model.PhieuXKTC.SoPhieu — @Model.PhieuXKTC.NgayXuat.ToString("dd/MM/yyyy")</span></div>
+  <div class="row g-2" style="font-size:.875rem">
+    <div class="col-sm-4"><span class="text-muted">Bộ phận:</span> <strong>@Model.PhieuXKTC.BoPhanNhan</strong></div>
+    <div class="col-sm-4"><span class="text-muted">Lý do:</span> @Model.PhieuXKTC.LyDoXuat</div>
+    <div class="col-sm-4"><span class="text-muted">Người nhập:</span> @Model.PhieuXKTC.NguoiUpload</div>
+  </div>
+</div>
+<div class="card">
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Tên vật tư</th><th>Số PSP</th><th>Nhà cung cấp</th><th class="text-end">CT</th><th class="text-end">Thực tế</th><th>ĐVT</th><th>TT</th><th style="width:80px">Thao tác</th></tr></thead>
+    <tbody>
+    @foreach(var (r,i) in Model.ChiTiet.Select((x,i)=>(x,i+1))){
+      <tr>
+        <td class="text-muted">@i</td>
+        <td>@(string.IsNullOrWhiteSpace(r.TenVt) ? r.MoTaVatTu : r.TenVt)</td>
+        <td class="text-muted">@r.SoPhieuSp</td>
+        <td class="text-muted">@r.TenNcc</td>
+        <td class="text-end">@r.SoLuongChungTu.ToString("N3")</td>
+        <td class="text-end @(r.SoLuongThucTe<r.SoLuongChungTu?"text-danger":"")">@r.SoLuongThucTe.ToString("N3")</td>
+        <td>@r.DonViTinh</td>
+        <td>
+          @if(r.TrangThai=="da_bo_qua"){<span class="badge badge-gray" title="@r.LyDoBoQua">Bỏ qua</span>}
+          else if(r.SoLuongThucTe<r.SoLuongChungTu){<span class="badge badge-red">Thiếu</span>}
+          else{<span class="badge badge-green">Đủ</span>}
+        </td>
+        <td>
+          @if(r.TrangThai!="da_bo_qua" && r.SoLuongThucTe<r.SoLuongChungTu){
+            <button class="btn-outline btn-sm" onclick="boQua(@r.Id)">Bỏ qua</button>
+          }
+        </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+@section Scripts{<script>
+async function boQua(id){
+  const ly=prompt('Lý do bỏ qua:');if(!ly)return;
+  const form=new FormData();form.append('idCt',id);form.append('lyDo',ly);
+  const res=await fetch('/NhapKhoTaiChinh/BoQua',{method:'POST',body:form});
+  const j=await res.json();if(j.ok){toast('Đã lưu!');location.reload();}
+}
+</script>}

@@ -1,0 +1,80 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.VatTu>
+@{ ViewData["Title"] = "Vật tư"; }
+@functions{
+  string LoaiBadge(string l) => l switch {
+    "giay_cuon"   => "<span class='badge badge-blue'>Giấy cuộn</span>",
+    "giay_to_roi" => "<span class='badge badge-cyan'>Giấy tờ rời</span>",
+    "muc"         => "<span class='badge badge-pink'>Mực in</span>",
+    "khuon_be"    => "<span class='badge badge-yellow'>Khuôn bế</span>",
+    _             => "<span class='badge badge-gray'>Khác</span>"
+  };
+}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-box-seam me-2"></i>Danh mục vật tư</span>
+    <button class="btn-primary btn-sm" onclick="openModal('Thêm vật tư','/DanhMuc/VatTuForm')"><i class="bi bi-plus-lg"></i> Thêm</button>
+  </div>
+  <div class="d-flex gap-2 mb-3 flex-wrap">
+    <input id="qs" class="form-control" style="max-width:200px" placeholder="Tìm tên, mã..." oninput="filterVt()">
+    <select id="qloai" class="form-select" style="max-width:150px" onchange="filterVt()">
+      <option value="">Tất cả loại</option>
+      <option value="giay_cuon">Giấy cuộn</option>
+      <option value="giay_to_roi">Giấy tờ rời</option>
+      <option value="muc">Mực in</option>
+      <option value="khuon_be">Khuôn bế</option>
+      <option value="khac">Khác</option>
+    </select>
+    <select id="qactive" class="form-select" style="max-width:140px" onchange="filterVt()">
+      <option value="">Tất cả</option><option value="1">Đang dùng</option><option value="0">Ngừng</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl" id="vtTable">
+      <thead><tr><th>#</th><th>Mã VT</th><th>Tên vật tư</th><th>Nhóm</th><th>Loại</th><th>ĐVT</th><th class="text-end">Tồn kho</th><th class="text-end">Tối thiểu</th><th>Cờ</th><th>TT</th><th style="width:105px">Thao tác</th></tr></thead>
+      <tbody>
+      @foreach(var (r,i) in Model.Select((x,i)=>(x,i+1))){
+        var low = r.TonKhoToiThieu>0 && r.TonKhoHienTai<r.TonKhoToiThieu;
+        <tr data-loai="@r.LoaiVatTu" data-active="@(r.IsActive?1:0)" data-q="@((r.MaVt+r.TenVt).ToLower())">
+          <td class="text-muted">@i</td>
+          <td><code style="font-size:.78rem">@r.MaVt</code></td>
+          <td><strong>@r.TenVt</strong>@(low?" <span title='Tồn thấp!' style='color:var(--danger)'>⚠️</span>":"")</td>
+          <td class="text-muted">@r.TenNhom</td>
+          <td>@Html.Raw(LoaiBadge(r.LoaiVatTu))</td>
+          <td>@r.DonViTinh</td>
+          <td class="text-end @(low?"text-danger fw-bold":"")">@r.TonKhoHienTai.ToString("N3")</td>
+          <td class="text-end text-muted">@r.TonKhoToiThieu.ToString("N3")</td>
+          <td>
+            @Html.Raw(r.LaVatTuDichDanh?"<span title='Đích danh'>🎯</span>":"")
+            @Html.Raw(r.CanTheoDoiTieuHao?"<span title='Tiêu hao'>📊</span>":"")
+          </td>
+          <td><span class="badge @(r.IsActive?"badge-green":"badge-gray")">@(r.IsActive?"Dùng":"Ngừng")</span></td>
+          <td>
+            <button class="btn-icon" onclick="openModal('Sửa vật tư','/DanhMuc/VatTuForm?id=@r.Id')" title="Sửa"><i class="bi bi-pencil"></i></button>
+            @if(r.LoaiVatTu == "khuon_be"){
+              <a class="btn-icon" href="/KhuonBe" title="Sang module Khuôn bế (tự đồng bộ khi mở)"><i class="bi bi-scissors"></i></a>
+            }
+            <button class="btn-icon" onclick="openModal('Xuất kho nhanh','/TonKho/XuatKhoNhanhForm?id=@r.Id')" title="Xuất kho nhanh">
+              <i class="bi bi-box-arrow-up"></i>
+            </button>
+            <button class="btn-icon" onclick="postJson('/DanhMuc/VatTuToggle',{id:@r.Id,isActive:@(r.IsActive?"false":"true")})" title="@(r.IsActive?"Ngừng":"Kích hoạt")">
+              <i class="bi bi-@(r.IsActive?"pause-circle":"play-circle")"></i>
+            </button>
+          </td>
+        </tr>
+      }
+      @if(!Model.Any()){<tr><td colspan="11" class="text-center text-muted py-4">Chưa có vật tư</td></tr>}
+      </tbody>
+    </table>
+  </div>
+</div>
+@section Scripts{<script>
+function filterVt(){
+  const s=document.getElementById('qs').value.toLowerCase();
+  const l=document.getElementById('qloai').value;
+  const a=document.getElementById('qactive').value;
+  document.querySelectorAll('#vtTable tbody tr[data-loai]').forEach(r=>{
+    const ok=(!s||r.dataset.q.includes(s))&&(!l||r.dataset.loai===l)&&(!a||r.dataset.active===a);
+    r.style.display=ok?'':'none';
+  });
+}
+</script>}

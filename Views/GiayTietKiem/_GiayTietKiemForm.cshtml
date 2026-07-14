@@ -1,0 +1,83 @@
+@model KhoQuanLy.Models.ViewModels.GiayTietKiemVM
+@{
+  var selectedPhieuSp = Model.PhieuSpList.FirstOrDefault(x => x.Value == Model.IdPhieuSp.ToString())?.Text ?? "";
+  var selectedVatTuCuon = Model.VatTuCuonList.FirstOrDefault(x => x.Value == Model.IdVatTuCuon.ToString())?.Text ?? "";
+}
+<form id="fGtk" asp-action="Save" asp-controller="GiayTietKiem" method="post">
+  <input type="hidden" asp-for="Id"/>
+  <div class="row g-2 mb-2">
+    <div class="col-6">
+      <label asp-for="IdPhieuSp" class="form-label"></label>
+      <input id="gtkPhieuSpText" class="form-control form-control-sm" list="gtkPhieuSpOptions" value="@selectedPhieuSp" placeholder="Gõ số PSP..." autocomplete="off" oninput="syncGtkLookup('gtkPhieuSpText','IdPhieuSp',gtkPhieuSps)" onchange="syncGtkLookup('gtkPhieuSpText','IdPhieuSp',gtkPhieuSps)"/>
+      <input asp-for="IdPhieuSp" type="hidden"/>
+      <datalist id="gtkPhieuSpOptions">
+        @foreach(var i in Model.PhieuSpList){<option value="@i.Text"></option>}
+      </datalist>
+      <span asp-validation-for="IdPhieuSp" class="text-danger small"></span>
+    </div>
+    <div class="col-6">
+      <label asp-for="IdVatTuCuon" class="form-label"></label>
+      <input id="gtkVatTuCuonText" class="form-control form-control-sm" list="gtkVatTuCuonOptions" value="@selectedVatTuCuon" placeholder="Gõ mã/tên giấy cuộn..." autocomplete="off" oninput="syncGtkLookup('gtkVatTuCuonText','IdVatTuCuon',gtkVatTuCuons)" onchange="syncGtkLookup('gtkVatTuCuonText','IdVatTuCuon',gtkVatTuCuons)"/>
+      <input asp-for="IdVatTuCuon" type="hidden"/>
+      <datalist id="gtkVatTuCuonOptions">
+        @foreach(var i in Model.VatTuCuonList){<option value="@i.Text"></option>}
+      </datalist>
+      <span asp-validation-for="IdVatTuCuon" class="text-danger small"></span>
+    </div>
+  </div>
+  <div class="row g-2 mb-2">
+    <div class="col-6">
+      <label asp-for="KgYeuCau" class="form-label"></label>
+      <input asp-for="KgYeuCau" class="form-control form-control-sm" type="number" step="0.001" oninput="calcTietKiem()"/>
+    </div>
+    <div class="col-6">
+      <label asp-for="KgThucXa" class="form-label"></label>
+      <input asp-for="KgThucXa" class="form-control form-control-sm" type="number" step="0.001" oninput="calcTietKiem()"/>
+    </div>
+  </div>
+  <div class="mb-2 p-2 rounded" style="background:#f0fdf4;font-size:.875rem">
+    Kg tiết kiệm: <strong id="kgTk" class="text-success">0.000</strong>
+  </div>
+  <div class="mb-2">
+    <label asp-for="TenThanhPhamBu" class="form-label"></label>
+    <input asp-for="TenThanhPhamBu" class="form-control form-control-sm" placeholder="Tên thành phẩm dùng bù..."/>
+  </div>
+  <div class="row g-2 mb-2">
+    <div class="col-6">
+      <label asp-for="SoBat" class="form-label"></label>
+      <input asp-for="SoBat" class="form-control form-control-sm" type="number"/>
+    </div>
+    <div class="col-6">
+      <label asp-for="SoToQuyDoi" class="form-label"></label>
+      <input asp-for="SoToQuyDoi" class="form-control form-control-sm" type="number"/>
+    </div>
+  </div>
+  <div class="mb-3">
+    <label asp-for="GhiChu" class="form-label"></label>
+    <textarea asp-for="GhiChu" class="form-control form-control-sm" rows="2"></textarea>
+  </div>
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn-primary btn-sm" onclick="submitForm('fGtk')">
+      <i class="bi bi-check-lg"></i> Lưu
+    </button>
+  </div>
+</form>
+<script>
+const gtkPhieuSps=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PhieuSpList.Select(i=>new{ id=i.Value, text=i.Text })));
+const gtkVatTuCuons=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VatTuCuonList.Select(i=>new{ id=i.Value, text=i.Text })));
+function normalizeGtkText(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
+function syncGtkLookup(inputId, hiddenName, list){
+  const input=document.getElementById(inputId);
+  const hidden=document.querySelector(`#fGtk input[name="${hiddenName}"]`);
+  const item=list.find(x=>normalizeGtkText(x.text)===normalizeGtkText(input.value));
+  if(item){hidden.value=item.id;input.value=item.text;}else hidden.value='';
+}
+function calcTietKiem(){
+  const yc=parseFloat(document.querySelector('[name="KgYeuCau"]').value)||0;
+  const xa=parseFloat(document.querySelector('[name="KgThucXa"]').value)||0;
+  document.getElementById('kgTk').textContent=(yc-xa).toFixed(3);
+}
+document.addEventListener('DOMContentLoaded', calcTietKiem);
+calcTietKiem();
+</script>

@@ -1,0 +1,47 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.TieuHaoThucTe>
+@{ ViewData["Title"] = "Tiêu hao thực tế"; var nam = ViewBag.Nam as int?; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-bar-chart me-2"></i>Tiêu hao thực tế</span>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="max-width:100px"
+              onchange="location='/DinhMuc/TieuHao?nam='+this.value">
+        @for(int y=DateTime.Today.Year; y>=DateTime.Today.Year-3; y--){          
+          <option value="@y" selected="@(nam == y)">@y</option>
+        }
+      </select>
+      <button class="btn-primary btn-sm" onclick="openModal('Ghi tiêu hao','/DinhMuc/TieuHaoForm')">
+        <i class="bi bi-plus-lg"></i> Ghi nhận
+      </button>
+      <a href="/DinhMuc" class="btn-outline btn-sm">← Định mức</a>
+    </div>
+  </div>
+  <table class="tbl">
+    <thead>
+      <tr><th>#</th><th>Vật tư</th><th>Tháng in</th><th class="text-end">Số tờ in</th>
+        <th class="text-end">SL tiêu hao</th><th>Phiếu XK</th><th>Ngày nhập</th>
+        <th style="width:50px">Xóa</th></tr>
+    </thead>
+    <tbody>
+    @foreach(var (r,i) in Model.Select((x,i)=>(x,i+1))){
+      <tr>
+        <td class="text-muted">@i</td>
+        <td><strong>@r.TenVt</strong></td>
+        <td>@r.ThangInThucTe.ToString("MM/yyyy")</td>
+        <td class="text-end">@r.SoToIn?.ToString("N0")</td>
+        <td class="text-end fw-bold">@r.SoLuongTieuHao.ToString("N3")</td>
+        <td class="text-muted">@r.SoPhieuXk</td>
+        <td class="text-muted">@r.CreatedAt.ToString("dd/MM/yy")</td>
+        <td>
+          <button class="btn-icon del" onclick="confirmAction('Xóa dòng này?','/DinhMuc/TieuHaoDelete?id=@r.Id')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    }
+    @if(!Model.Any()){
+      <tr><td colspan="8" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr>
+    }
+    </tbody>
+  </table>
+</div>

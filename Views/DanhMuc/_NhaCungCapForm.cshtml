@@ -1,0 +1,23 @@
+@model KhoQuanLy.Models.ViewModels.NhaCungCapVM
+<form id="fNcc" asp-action="NhaCungCapSave" asp-controller="DanhMuc" method="post">
+  <input type="hidden" asp-for="Id"/>
+  <div class="mb-2"><label asp-for="TenNcc" class="form-label"></label>
+    <input asp-for="TenNcc" class="form-control form-control-sm"/>
+    <span asp-validation-for="TenNcc" class="text-danger small"></span></div>
+  <div class="row g-2 mb-2">
+    <div class="col-6"><label asp-for="DienThoai" class="form-label"></label>
+      <input asp-for="DienThoai" class="form-control form-control-sm"/></div>
+    <div class="col-6 d-flex align-items-end pb-1">
+      <div class="form-check"><input asp-for="IsActive" class="form-check-input" type="checkbox"/>
+        <label asp-for="IsActive" class="form-check-label small">Hoạt động</label></div>
+    </div>
+  </div>
+  <div class="mb-2"><label asp-for="DiaChiNcc" class="form-label"></label>
+    <input asp-for="DiaChiNcc" class="form-control form-control-sm"/></div>
+  <div class="mb-3"><label asp-for="GhiChu" class="form-label"></label>
+    <textarea asp-for="GhiChu" class="form-control form-control-sm" rows="2"></textarea></div>
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn-primary btn-sm" onclick="submitForm('fNcc')"><i class="bi bi-check-lg"></i> Lưu</button>
+  </div>
+</form>

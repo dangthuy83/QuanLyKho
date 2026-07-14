@@ -1,0 +1,27 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.PhieuXKTC>
+@{
+  ViewData["Title"] = "Nhập Kho Tài Chính";
+  ViewData["Subtitle"] = "Ghi nhận vật tư NHẬP vào kho phân xưởng theo chứng từ Tài chính phát hành";
+}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-receipt me-2"></i>Nhập kho theo chứng từ tài chính</span>
+    <a href="/NhapKhoTaiChinh/Create" class="btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nhập mới</a>
+  </div>
+  <table class="tbl">
+    <thead><tr><th>Số phiếu</th><th>Ngày xuất</th><th>Bộ phận nhận</th><th>Lý do</th><th>Người upload</th><th style="width:60px"></th></tr></thead>
+    <tbody>
+    @foreach(var r in Model){
+      <tr>
+        <td><strong>@r.SoPhieu</strong></td>
+        <td>@r.NgayXuat.ToString("dd/MM/yyyy")</td>
+        <td class="text-muted">@r.BoPhanNhan</td>
+        <td class="text-muted">@r.LyDoXuat</td>
+        <td class="text-muted">@r.NguoiUpload</td>
+        <td><a href="/NhapKhoTaiChinh/Detail/@r.Id" class="btn-icon"><i class="bi bi-eye"></i></a></td>
+      </tr>
+    }
+    @if(!Model.Any()){<tr><td colspan="6" class="text-center text-muted py-4">Chưa có phiếu nào</td></tr>}
+    </tbody>
+  </table>
+</div>

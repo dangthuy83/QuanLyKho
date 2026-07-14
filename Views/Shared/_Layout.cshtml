@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>@ViewData["Title"] — Kho Phân Xưởng</title>
+<link href="~/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<link href="~/css/site.css" rel="stylesheet"/>
+@await RenderSectionAsync("Styles",required:false)
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="brand">
+    <div class="brand-icon">📦</div>
+    <div>
+      <div class="brand-name">Kho Phân Xưởng</div>
+      <div class="brand-sub">Quản lý vật tư in ấn</div>
+    </div>
+  </div>
+  <nav style="padding:.4rem 0 1rem">
+    <a href="/" class="nav-link"><span class="nav-icon"><i class="bi bi-speedometer2"></i></span>Tổng quan</a>
+
+    <div class="nav-section">Danh mục</div>
+    <a href="/DanhMuc/VatTu" class="nav-link"><span class="nav-icon"><i class="bi bi-box-seam"></i></span>Vật tư</a>
+    <a href="/DanhMuc/NhomVatTu" class="nav-link"><span class="nav-icon"><i class="bi bi-collection"></i></span>Nhóm vật tư</a>
+    <a href="/DanhMuc/NhaCungCap" class="nav-link"><span class="nav-icon"><i class="bi bi-truck"></i></span>Nhà cung cấp</a>
+    <a href="/DanhMuc/BoPhan" class="nav-link"><span class="nav-icon"><i class="bi bi-diagram-3"></i></span>Bộ phận</a>
+
+    <div class="nav-section">Nghiệp vụ</div>
+    <a href="/PhieuSP" class="nav-link"><span class="nav-icon"><i class="bi bi-file-earmark-text"></i></span>Phiếu sản phẩm</a>
+    <a href="/DeNghiXuat" class="nav-link"><span class="nav-icon"><i class="bi bi-send"></i></span>Đề nghị xuất giấy</a>
+    <a href="/NhapKhoTaiChinh" class="nav-link"><span class="nav-icon"><i class="bi bi-receipt"></i></span>Nhập Kho Vật Tư</a>
+    <a href="/TraLaiKho" class="nav-link"><span class="nav-icon"><i class="bi bi-arrow-return-left"></i></span>Trả lại kho</a>
+    <a href="/GiayTietKiem" class="nav-link"><span class="nav-icon"><i class="bi bi-piggy-bank"></i></span>Giấy tiết kiệm</a>
+    <a href="/KhuonBe" class="nav-link"><span class="nav-icon"><i class="bi bi-scissors"></i></span>Khuôn bế</a>
+
+    <div class="nav-section">Phân tích</div>
+    <a href="/DinhMuc" class="nav-link"><span class="nav-icon"><i class="bi bi-sliders"></i></span>Định mức &amp; Tiêu hao</a>
+    <a href="/TonKho" class="nav-link"><span class="nav-icon"><i class="bi bi-layers"></i></span>Tồn kho &amp; Cảnh báo</a>
+    <a href="/BaoCao" class="nav-link"><span class="nav-icon"><i class="bi bi-bar-chart-line"></i></span>Báo cáo &amp; Export</a>
+
+    <div class="nav-section">Hệ thống</div>
+    <a href="/Home/Settings" class="nav-link"><span class="nav-icon"><i class="bi bi-gear"></i></span>Cấu hình</a>
+  </nav>
+</div>
+
+<div id="topbar">
+  <button id="menuToggle" class="btn-icon d-md-none"><i class="bi bi-list" style="font-size:1.2rem"></i></button>
+  <h1 class="page-title">@(ViewData["Title"] ?? "Tổng quan")</h1>
+  @if(ViewData["Subtitle"] != null){
+    <span class="text-muted small d-none d-md-inline">— @ViewData["Subtitle"]</span>
+  }
+  <div class="topbar-right">
+    <i class="bi bi-calendar3"></i> @DateTime.Now.ToString("dd/MM/yyyy")
+  </div>
+</div>
+
+<div id="main">
+  @if(TempData["Success"] != null){
+    <div class="alert alert-success">✓ @TempData["Success"]</div>
+  }
+  @if(TempData["Warning"] != null){
+    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> @TempData["Warning"]</div>
+  }
+  @if(TempData["Error"] != null){
+    <div class="alert alert-danger">⚠ @TempData["Error"]</div>
+  }
+  @RenderBody()
+</div>
+
+<div id="toast-wrap"></div>
+
+<!-- Form Modal -->
+<div class="modal fade" id="formModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Form</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+</div>
+
+<script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts",required:false)
+</body>
+</html>

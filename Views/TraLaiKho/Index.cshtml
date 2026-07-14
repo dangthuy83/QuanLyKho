@@ -1,0 +1,24 @@
+@model IEnumerable<KhoQuanLy.Models.Entities.PhieuTraLai>
+@{ ViewData["Title"] = "Trả lại kho"; }
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-arrow-return-left me-2"></i>Phiếu trả lại kho</span>
+    <a href="/TraLaiKho/Create" class="btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Tạo phiếu</a>
+  </div>
+  <table class="tbl">
+    <thead><tr><th>Số phiếu</th><th>Ngày trả</th><th>Lý do</th><th>Ghi chú</th><th>Người tạo</th><th style="width:60px"></th></tr></thead>
+    <tbody>
+    @foreach(var r in Model){
+      <tr>
+        <td><strong>@r.SoPhieu</strong></td>
+        <td>@r.NgayTra.ToString("dd/MM/yyyy")</td>
+        <td><span class="badge @(r.LyDo=="loi"?"badge-red":r.LyDo=="thua"?"badge-yellow":"badge-gray")">@(r.LyDo=="loi"?"Lỗi":r.LyDo=="thua"?"Thừa":"Khác")</span></td>
+        <td class="text-muted">@r.GhiChu</td>
+        <td class="text-muted">@r.NguoiTao</td>
+        <td><a href="/TraLaiKho/Detail/@r.Id" class="btn-icon"><i class="bi bi-eye"></i></a></td>
+      </tr>
+    }
+    @if(!Model.Any()){<tr><td colspan="6" class="text-center text-muted py-4">Chưa có phiếu nào</td></tr>}
+    </tbody>
+  </table>
+</div>
